@@ -24,6 +24,9 @@ export default defineConfig({
     dts({
       tsconfigPath: './tsconfig.build.json',
       rollupTypes: true,
+      // Inline type-fest (a dev-only dependency) into the bundled declarations
+      // so the published .d.ts is self-contained and consumers do not need it.
+      bundledPackages: [ 'type-fest' ],
       include: [ 'src' ],
       exclude: [
         'src/**/*.test.ts',

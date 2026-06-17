@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+  "git": {
+    "commitMessage": "chore: release v${version} [skip ci]",
+    "tagName": "v${version}",
+    "tagAnnotation": "Release v${version}",
+    "requireCleanWorkingDir": false,
+    "requireUpstream": false,
+    "push": true
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}"
+  },
+  "npm": {
+    "publish": true,
+    "skipChecks": true
+  },
+  "hooks": {
+    "before:init": [
+      "yarn lint",
+      "yarn typecheck",
+      "yarn test",
+      "yarn build"
+    ]
+  }
+}

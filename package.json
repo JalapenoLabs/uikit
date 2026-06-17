@@ -1,0 +1,93 @@
+{
+  "name": "@jalapenolabs/uikit",
+  "version": "0.1.0",
+  "description": "Jalapeno Labs' reusable React component library and design system.",
+  "keywords": [
+    "react",
+    "components",
+    "ui",
+    "design-system",
+    "jalapenolabs"
+  ],
+  "license": "MIT",
+  "author": "Jalapeno Labs",
+  "homepage": "https://jalapenolabs.github.io/uikit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JalapenoLabs/uikit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JalapenoLabs/uikit/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20",
+    "yarn": ">=4"
+  },
+  "scripts": {
+    "build": "vite build",
+    "clean": "rimraf dist storybook-static coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:dev": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "release": "release-it"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "resolutions": {
+    "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "@jalapenolabs/cli": "https://github.com/jalapenolabs/cli.git",
+    "@storybook/addon-a11y": "^8.4.0",
+    "@storybook/addon-essentials": "^8.4.0",
+    "@storybook/react": "^8.4.0",
+    "@storybook/react-vite": "^8.4.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react-swc": "^3.7.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^9.0.0",
+    "happy-dom": "^15.11.0",
+    "jiti": "^2.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "release-it": "^17.10.0",
+    "rimraf": "^6.0.0",
+    "storybook": "^8.4.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^3.0.0"
+  },
+  "packageManager": "yarn@4.17.0"
+}

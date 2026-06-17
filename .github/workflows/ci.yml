@@ -1,0 +1,47 @@
+# Copyright © 2026 Jalapeno Labs
+#
+# Pull-request and develop-branch gate. Runs lint, typecheck, test, and build as
+# independent matrix jobs so a single failure does not mask the others
+# (fail-fast: false). The brand submodule is intentionally NOT checked out: the
+# package inlines its design tokens, so CI never needs the private brand repo.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: ${{ matrix.task }}
+    runs-on: [ self-hosted, fedora ]
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [ lint, typecheck, test, build ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run ${{ matrix.task }}
+        run: yarn ${{ matrix.task }}

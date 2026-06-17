@@ -4,15 +4,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import dts from 'vite-plugin-dts'
 import { fileURLToPath } from 'node:url'
+import { isAbsolute } from 'node:path'
 
-// The library is published as a thin React layer. React (and its JSX runtime)
-// are peer dependencies, so they must stay external to avoid bundling a second
-// copy of React into every consumer's app.
-const externalDependencies = [
-  'react',
-  'react-dom',
-  'react/jsx-runtime',
-]
+// Externalize every bare (non-relative) import. React stays external because it
+// is a peer dependency; runtime dependencies (lodash-es, pretty-bytes) stay
+// external so the consumer's bundler can dedupe and tree-shake them rather than
+// us shipping a second copy. Only our own source is bundled into dist/.
+function isExternalDependency(id: string): boolean {
+  // Bare specifiers (npm packages) are external; relative paths and our own
+  // absolute source paths (including Windows drive paths) are bundled.
+  return !id.startsWith('.') && !isAbsolute(id)
+}
 
 export default defineConfig({
   plugins: [
@@ -43,7 +45,7 @@ export default defineConfig({
         : 'index.cjs',
     },
     rollupOptions: {
-      external: externalDependencies,
+      external: isExternalDependency,
       output: {
         globals: {
           'react': 'React',

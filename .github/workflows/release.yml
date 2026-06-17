@@ -8,8 +8,17 @@
 # release-it commits the version bump back to main with `[skip ci]`; pushes made
 # with GITHUB_TOKEN do not re-trigger workflows, so there is no release loop.
 #
-# Required repository secret:
-#   NPM_TOKEN - an npm automation token with publish rights to @jalapenolabs.
+# Publishing to npm uses Trusted Publishing (OIDC), so there is NO npm token to
+# manage. See https://docs.npmjs.com/trusted-publishers. Requirements:
+#   - this job has `id-token: write` (set below),
+#   - npm CLI >= 11.5.1 (we upgrade it before publishing),
+#   - a Trusted Publisher is configured on npmjs for this package pointing at
+#     repo JalapenoLabs/uikit and workflow `release.yml`.
+#
+# Bootstrap (one time, to avoid the chicken-and-egg): publish the very first
+# version manually so the package exists, then add the Trusted Publisher on
+# npmjs. Every release after that flows through this workflow with zero secrets.
+# Provenance attestation is attached automatically under Trusted Publishing.
 
 name: Release
 
@@ -48,6 +57,9 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Upgrade npm for Trusted Publishing (OIDC)
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: yarn install --immutable
 
@@ -56,11 +68,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Release and publish to npm
+      # No NPM token: release-it runs `npm publish`, which authenticates via OIDC
+      # Trusted Publishing. `npm.skipChecks` in .release-it.json skips the token
+      # precheck that would otherwise fail without a logged-in user.
+      - name: Release and publish to npm (Trusted Publishing)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: yarn release-it patch --ci
 
       - name: Publish to GitHub Packages

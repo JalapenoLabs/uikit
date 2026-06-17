@@ -4,6 +4,8 @@
 
 **Jalapeno Labs' reusable React component library and design system.**
 
+_Written by Alex Navarro, hand-built over years of product work._
+
 [![CI](https://github.com/JalapenoLabs/uikit/actions/workflows/ci.yml/badge.svg)](https://github.com/JalapenoLabs/uikit/actions/workflows/ci.yml)
 [![Release](https://github.com/JalapenoLabs/uikit/actions/workflows/release.yml/badge.svg)](https://github.com/JalapenoLabs/uikit/actions/workflows/release.yml)
 [![npm](https://img.shields.io/npm/v/@jalapenolabs/uikit?color=5ea100&label=npm)](https://www.npmjs.com/package/@jalapenolabs/uikit)
@@ -110,8 +112,10 @@ Already cloned without submodules? Run `git submodule update --init --recursive`
   redeploys the docs.
 - CI runs lint, typecheck, test, and build on every pull request.
 - All code carries a `// Copyright © <year> Jalapeno Labs` header and follows the
-  conventions in [`AGENTS.md`](./AGENTS.md).
+  conventions in [`CLAUDE.md`](./CLAUDE.md).
 
 ## License
 
 [MIT](./LICENSE) © Jalapeno Labs
+
+Written by [Alex Navarro](https://github.com/navarrotech).

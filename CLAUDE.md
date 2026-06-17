@@ -114,6 +114,37 @@ rewritten to **Jalapeno Labs** (or `jalapenolabs` / `@jalapenolabs` as the
 casing demands). Do not leave the old brand anywhere in shipped code, docs, or
 identifiers.
 
+## Porting status
+
+This library is being assembled by porting self-contained pieces from the legacy
+Mooreslab AI codebases (the `frontend-core` ui package, `tesseract/bifrost`
+common utilities, and the platform frontend). All ported code is rebranded to
+Jalapeno Labs and rewritten to the conventions above.
+
+**Wave 1 (done):**
+- Components: Button, FlattenErrors, HighlightFuzzy, AnimatedPercent, CoverageRing
+- Hooks: useRepeater, useTimer, useRerender, useSelection, useSubstringSearch,
+  usePagination, useScrollOnMount, useScrollPositionRestore, useHotkey
+- Utils: clipText, getErrorMessage, getLast, percent, reorderArray, stringify,
+  formatBytes, singleThreadedInterval, setTimeoutToNextSecond, fuzzyMatch, hotkeys
+
+**Backlog (good next candidates, each adds a dependency or needs decoupling):**
+- `MarkdownContent` (react-markdown + remark-gfm + rehype-raw)
+- `TaglineRoller` (framer-motion)
+- `JSONViewer` (@uiw/react-json-view)
+- `FileIcon` (material-icon-theme)
+- `DragContext` / `useDraggable` (@dnd-kit)
+- `useCsv` (d3-dsv), `useForm` + `useZod` (zod + react-hook-form)
+- Utils needing deps or re-typing: `json` (jsonc-parser + zod), `schema` (zod),
+  `hashJson` (js-sha256), `deepDiff` (lodash, needs an any-free re-type),
+  `time` / `timer` (moment/humanize-duration)
+- Decouple-then-port: `TrimLongText`, `Accordion`, `TypeaheadInput` (currently
+  bound to @heroui/react); `useSystemTheme` (extract the pure theme resolver)
+
+**Skipped (not portable):** Node-only fs/path utilities (createTree,
+searchUpwardsForFile, getUniqueDestinationPath), app-specific `urls.ts`, the
+Monaco/Electron/Redux/i18n-coupled components and hooks.
+
 ## Common commands
 
 ```

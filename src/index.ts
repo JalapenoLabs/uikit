@@ -30,6 +30,18 @@ export type { Props as TimerProps } from './components/Timer/Timer'
 export { TrimLongText } from './components/TrimLongText/TrimLongText'
 export type { TrimLongTextProps } from './components/TrimLongText/TrimLongText'
 
+export { DragContext, useDraggableContext } from './components/DragNDrop/DragContext'
+export { DraggableItems } from './components/DragNDrop/DraggableItems'
+export { useDraggable } from './components/DragNDrop/useDraggable'
+export type {
+  DragItem,
+  RenderItemProps,
+  DropEdge,
+  GroupRegistration,
+  DraggableContextValue,
+  DraggableItemsProps,
+} from './components/DragNDrop/types'
+
 // ///////////////////////////// //
 //             Hooks             //
 // ///////////////////////////// //
@@ -44,6 +56,8 @@ export { usePagination } from './hooks/usePagination'
 export { useScrollOnMount } from './hooks/useScrollOnMount'
 export { useScrollPositionRestore } from './hooks/useScrollPositionRestore'
 export { useHotkey } from './hooks/useHotkey'
+export { useFilterDrawerState } from './hooks/useFilterDrawerState'
+export type { FilterDrawerState } from './hooks/useFilterDrawerState'
 
 // ///////////////////////////// //
 //           Utilities           //

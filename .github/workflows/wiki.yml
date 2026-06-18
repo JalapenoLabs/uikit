@@ -1,0 +1,80 @@
+# Copyright © 2026 Jalapeno Labs
+#
+# Regenerates the GitHub Wiki reference from source and pushes it to the repo's
+# wiki (`*.wiki.git`). The Wiki is the static, GitHub-native reference; the
+# interactive Storybook (docs.yml) remains the live playground.
+#
+# Runs on push to main and, temporarily pre-1.0, develop. Switch to [ main ]
+# only once the first release lands.
+
+name: Wiki
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - "src/**"
+      - "scripts/generate-wiki.mjs"
+      - ".github/workflows/wiki.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Generate and publish the wiki
+    runs-on: [ self-hosted, fedora ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate wiki pages
+        run: yarn wiki
+
+      - name: Publish to the wiki repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+          wiki_dir="$(mktemp -d)"
+
+          if git clone "$remote" "$wiki_dir"; then
+            echo "Cloned existing wiki."
+          else
+            echo "Wiki not initialized yet; creating it."
+            git init -b master "$wiki_dir"
+            git -C "$wiki_dir" remote add origin "$remote"
+          fi
+
+          # Replace the generated pages wholesale so removed exports disappear.
+          rm -f "$wiki_dir"/*.md
+          cp wiki/*.md "$wiki_dir"/
+
+          git -C "$wiki_dir" add -A
+          if git -C "$wiki_dir" diff --cached --quiet; then
+            echo "Wiki is already up to date."
+            exit 0
+          fi
+
+          git -C "$wiki_dir" \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "docs: sync wiki from ${GITHUB_SHA}"
+          git -C "$wiki_dir" push origin HEAD:master

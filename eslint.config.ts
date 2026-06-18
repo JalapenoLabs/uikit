@@ -18,6 +18,10 @@ export default defineConfig([
     '**/*.d.ts',
   ]),
   {
+    // The license-header plugin is registered by the base config for TypeScript
+    // only, so scope the rule to match (applying it to plain .mjs/.js would
+    // reference a plugin that is not in scope for those files).
+    files: [ '**/*.{ts,tsx}' ],
     rules: {
       'license-header/header': [
         'error',

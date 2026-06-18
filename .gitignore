@@ -6,6 +6,9 @@ dist/
 storybook-static/
 coverage/
 
+# Generated GitHub Wiki pages (pushed to the wiki repo by CI, not tracked here)
+wiki/
+
 # Logs
 *.log
 npm-debug.log*

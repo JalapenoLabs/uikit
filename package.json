@@ -53,6 +53,7 @@
     "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "wiki": "node scripts/generate-wiki.mjs",
     "release": "release-it"
   },
   "peerDependencies": {
@@ -85,6 +86,7 @@
     "happy-dom": "^15.11.0",
     "jiti": "^2.4.0",
     "react": "^18.3.1",
+    "react-docgen-typescript": "^2.2.2",
     "react-dom": "^18.3.1",
     "release-it": "^17.10.0",
     "rimraf": "^6.0.0",

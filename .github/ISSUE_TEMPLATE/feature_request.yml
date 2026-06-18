@@ -1,0 +1,59 @@
+name: Feature request
+description: Suggest a new component, hook, utility, or an improvement to an existing one.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposals that are portable and dependency-light fit this library best.
+        If your idea needs a heavy dependency, please call that out.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New component
+        - New hook
+        - New utility
+        - Improvement to an existing export
+        - Tooling / build / docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what is missing or painful today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or usage
+      description: Show how you would like to use it. A code sketch is ideal.
+      render: tsx
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing exports, other libraries, or workarounds you have tried.
+  - type: input
+    id: dependencies
+    attributes:
+      label: New dependencies
+      description: Would this require adding any runtime dependency? If so, which?
+      placeholder: e.g. none, or "framer-motion"
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: This belongs in a shared library (it is reusable, not app-specific).
+          required: true

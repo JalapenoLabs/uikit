@@ -1,0 +1,54 @@
+# Copyright © 2026 Jalapeno Labs
+#
+# Dependency update automation. Minor and patch bumps are grouped into a single
+# PR per ecosystem to keep noise down; majors arrive individually so they get a
+# deliberate review.
+#
+# The ignore list below is intentional: these packages are pinned by hand
+# because a bump tends to be a coordinated, breaking change (React major,
+# HeroUI/Tailwind design-system shifts, the ESLint/Vitest toolchains). Update
+# them manually, not via Dependabot.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: "@heroui/*"
+      - dependency-name: tailwindcss
+      - dependency-name: vitest
+      - dependency-name: "@vitest/*"
+      - dependency-name: eslint
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch

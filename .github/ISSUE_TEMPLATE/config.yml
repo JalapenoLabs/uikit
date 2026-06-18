@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Component documentation (Storybook)
+    url: https://jalapenolabs.github.io/uikit
+    about: Browse the live component docs before filing an issue.
+  - name: Questions and discussions
+    url: https://github.com/JalapenoLabs/uikit/discussions
+    about: For usage questions and open-ended ideas, start a discussion instead.

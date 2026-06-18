@@ -21,6 +21,15 @@ export {
   COVERAGE_GREEN,
 } from './components/CoverageRing/coverageColor'
 
+export { Loader } from './components/Loader/Loader'
+export type { Props as LoaderProps } from './components/Loader/Loader'
+
+export { Timer } from './components/Timer/Timer'
+export type { Props as TimerProps } from './components/Timer/Timer'
+
+export { TrimLongText } from './components/TrimLongText/TrimLongText'
+export type { TrimLongTextProps } from './components/TrimLongText/TrimLongText'
+
 // ///////////////////////////// //
 //             Hooks             //
 // ///////////////////////////// //

@@ -41,21 +41,28 @@ export default defineConfig({
     sourcemap: true,
     lib: {
       entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
-      name: 'JalapenoLabsUiKit',
-      formats: [ 'es', 'cjs' ],
-      fileName: (format) => format === 'es'
-        ? 'index.js'
-        : 'index.cjs',
     },
     rollupOptions: {
       external: isExternalDependency,
-      output: {
-        globals: {
-          'react': 'React',
-          'react-dom': 'ReactDOM',
-          'react/jsx-runtime': 'jsxRuntime',
+      // preserveModules mirrors src/ as one output file per module, so a
+      // consumer importing a single util pulls in only that file (and its own
+      // imports) rather than the whole library. This is what makes the package
+      // genuinely tree-shakeable down to per-export granularity.
+      output: [
+        {
+          format: 'es',
+          preserveModules: true,
+          preserveModulesRoot: 'src',
+          entryFileNames: '[name].js',
         },
-      },
+        {
+          format: 'cjs',
+          preserveModules: true,
+          preserveModulesRoot: 'src',
+          entryFileNames: '[name].cjs',
+          exports: 'named',
+        },
+      ],
     },
   },
 })

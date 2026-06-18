@@ -42,6 +42,24 @@ export type {
   DraggableItemsProps,
 } from './components/DragNDrop/types'
 
+export { Accordion } from './components/Accordion/Accordion'
+export type { AccordionProps } from './components/Accordion/Accordion'
+
+export { LuminescentText } from './components/LuminescentText/LuminescentText'
+export type { LuminescentTextProps } from './components/LuminescentText/LuminescentText'
+
+export { LanguageSelector } from './components/LanguageSelector/LanguageSelector'
+export type { LanguageSelectorProps, LanguageOption } from './components/LanguageSelector/LanguageSelector'
+export { getFlagEmoji } from './components/LanguageSelector/getFlagEmoji'
+
+export { ThemeSelector } from './components/ThemeSelector/ThemeSelector'
+export type { ThemePreference, ThemeSelectorProps } from './components/ThemeSelector/ThemeSelector'
+export {
+  ThemePreviewLight,
+  ThemePreviewDark,
+  ThemePreviewSystem,
+} from './components/ThemeSelector/previews'
+
 // ///////////////////////////// //
 //             Hooks             //
 // ///////////////////////////// //
@@ -58,6 +76,8 @@ export { useScrollPositionRestore } from './hooks/useScrollPositionRestore'
 export { useHotkey } from './hooks/useHotkey'
 export { useFilterDrawerState } from './hooks/useFilterDrawerState'
 export type { FilterDrawerState } from './hooks/useFilterDrawerState'
+export { useDomTheme } from './hooks/useDomTheme'
+export type { DomTheme } from './hooks/useDomTheme'
 
 // ///////////////////////////// //
 //           Utilities           //

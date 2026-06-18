@@ -55,12 +55,13 @@ jobs:
           remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
           wiki_dir="$(mktemp -d)"
 
-          if git clone "$remote" "$wiki_dir"; then
-            echo "Cloned existing wiki."
-          else
-            echo "Wiki not initialized yet; creating it."
-            git init -b master "$wiki_dir"
-            git -C "$wiki_dir" remote add origin "$remote"
+          # GitHub will not create a wiki repo from a push: its first page must
+          # be created once through the web UI. Until then, clone fails. Treat
+          # that as a soft skip (warning, not a red run) so this does not spam
+          # failures on every push; it auto-syncs once the wiki exists.
+          if ! git clone "$remote" "$wiki_dir" 2>/dev/null; then
+            echo "::warning title=Wiki not initialized::Create the first wiki page once via the GitHub UI (the Wiki tab), then re-run this workflow to publish the generated pages."
+            exit 0
           fi
 
           # Replace the generated pages wholesale so removed exports disappear.

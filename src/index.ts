@@ -77,6 +77,28 @@ export type { InformationProps, InformationPlacement } from './components/Inform
 export { ChangerButton } from './components/ChangerButton/ChangerButton'
 export type { ChangerButtonProps } from './components/ChangerButton/ChangerButton'
 
+export { SmartTable } from './components/SmartTable/SmartTable'
+export type { SmartTableProps } from './components/SmartTable/SmartTable'
+export { DataTable } from './components/SmartTable/DataTable'
+export type {
+  DataTableAction,
+  DataTableManagedColumn,
+  DataTablePaginationConfig,
+  DataTableProps,
+  DataTableRowReorderPayload,
+} from './components/SmartTable/DataTable.types'
+export { DataTableToolbar } from './components/SmartTable/DataTableToolbar'
+export { DataTableColumnControls } from './components/SmartTable/DataTableColumnControls'
+export { DataTableTextCell } from './components/SmartTable/DataTableTextCell'
+export type { DataTableTextCellProps } from './components/SmartTable/DataTableTextCell'
+export { TableTipContent } from './components/SmartTable/TableTipContent'
+export type { TableTipContentProps } from './components/SmartTable/TableTipContent'
+export { createManagedColumns } from './components/SmartTable/createManagedColumns'
+export { useDataTableState } from './components/SmartTable/useDataTableState'
+export { mergeColumnOrder } from './components/SmartTable/columnOrderUtils'
+export { defaultSmartTableLabels } from './components/SmartTable/labels'
+export type { SmartTableLabels } from './components/SmartTable/labels'
+
 // ///////////////////////////// //
 //             Hooks             //
 // ///////////////////////////// //

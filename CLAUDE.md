@@ -128,6 +128,24 @@ Jalapeno Labs and rewritten to the conventions above.
 - Utils: clipText, getErrorMessage, getLast, percent, reorderArray, stringify,
   formatBytes, singleThreadedInterval, setTimeoutToNextSecond, fuzzyMatch, hotkeys
 
+**SmartTable (done):** the legacy `mooretable` package, ported whole as
+`src/components/SmartTable/`. `SmartTable` (was `TableKit`) is the
+batteries-included entry point; `DataTable` is the low-level table. Decisions
+made during the port:
+- `@tanstack/react-table` joined the runtime dependencies (externalized in the
+  build, like @dnd-kit).
+- The `@mooreslabaiv1/ui` primitives (Tooltip, Input, Popover, Button, Icon)
+  were replaced with local dependency-free equivalents inside the SmartTable
+  directory; `@heroui/pagination` was replaced with a native pagination footer.
+- i18next was dropped: all user-facing strings live in `SmartTableLabels`
+  (English defaults in `labels.ts`), overridable per table via a `labels` prop.
+- The sass module + Tailwind classes were rewritten as one scoped stylesheet
+  (`jala-table-*` class names) emitted as an inline `<style>` element, themed
+  through CSS variables that flip under a `.dark` ancestor or
+  `[data-theme='dark']`.
+- It reuses the Wave 1 `HighlightFuzzy` component and
+  `useScrollPositionRestore` hook rather than shipping private copies.
+
 **Backlog (good next candidates, each adds a dependency or needs decoupling):**
 - `MarkdownContent` (react-markdown + remark-gfm + rehype-raw)
 - `TaglineRoller` (framer-motion)

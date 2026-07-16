@@ -11,7 +11,7 @@
 # Publishing to npm uses Trusted Publishing (OIDC), so there is NO npm token to
 # manage. See https://docs.npmjs.com/trusted-publishers. Requirements:
 #   - this job has `id-token: write` (set below),
-#   - npm CLI >= 11.5.1 (we upgrade it before publishing),
+#   - npm CLI >= 11.5.1 (Node 24's bundled npm already satisfies this),
 #   - a Trusted Publisher is configured on npmjs for this package pointing at
 #     repo JalapenoLabs/uikit and workflow `release.yml`.
 #
@@ -52,17 +52,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          # Pinned exactly; npm 12 requires Node ^22.22.2.
-          node-version: 22.22.2
+          # Pinned exactly. Node 24 bundles npm >= 11.5.1, which is what npm
+          # Trusted Publishing (OIDC) requires, so no npm self-upgrade step is
+          # needed (self-installing npm proved fragile on the runners).
+          node-version: 24.15.0
           registry-url: 'https://registry.npmjs.org'
 
       - name: Enable Corepack
         run: corepack enable
-
-      # Trusted Publishing needs npm >= 11.5.1. Pinned exactly, never `latest`,
-      # so a future npm major cannot break the release pipeline underneath us.
-      - name: Upgrade npm for Trusted Publishing (OIDC)
-        run: npm install -g npm@12.0.1
 
       - name: Install dependencies
         run: yarn install --immutable

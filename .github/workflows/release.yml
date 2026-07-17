@@ -55,8 +55,13 @@ jobs:
           # Pinned exactly. Node 24 bundles npm >= 11.5.1, which is what npm
           # Trusted Publishing (OIDC) requires, so no npm self-upgrade step is
           # needed (self-installing npm proved fragile on the runners).
+          #
+          # Deliberately NO `registry-url` here: setting it makes setup-node
+          # write an `_authToken=${NODE_AUTH_TOKEN}` .npmrc entry and export a
+          # placeholder token, which npm then uses instead of performing the
+          # OIDC exchange (scoped publishes fail as 404). The default registry
+          # is npmjs, so nothing else is needed for Trusted Publishing.
           node-version: 24.15.0
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Enable Corepack
         run: corepack enable

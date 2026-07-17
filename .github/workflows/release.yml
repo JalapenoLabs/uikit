@@ -74,6 +74,26 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # Prints the identity this job presents to npmjs so a Trusted Publisher
+      # mismatch (repo, workflow filename, environment) is visible in the log
+      # instead of surfacing as an opaque ENEEDAUTH. Decodes claims only; the
+      # raw ID token is never printed.
+      - name: OIDC diagnostics
+        run: |
+          echo "npm version: $(npm --version)"
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "OIDC not available: ACTIONS_ID_TOKEN_REQUEST_URL is missing (check id-token permission)"
+            exit 0
+          fi
+          echo "OIDC request URL is present"
+          payload=$(curl -sf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm:registry.npmjs.org" \
+            | jq -r '.value | split(".")[1]' \
+            | tr '_-' '/+' | { read seg; pad=$(( (4 - ${#seg} % 4) % 4 )); printf '%s' "$seg"; printf '=%.0s' $(seq 1 $pad); } \
+            | base64 -d 2>/dev/null || true)
+          echo "$payload" | jq '{sub, repository, repository_owner, workflow, workflow_ref, job_workflow_ref, environment, ref, event_name}' \
+            || echo "Could not decode ID token payload"
+
       # No NPM token: release-it runs `npm publish`, which authenticates via OIDC
       # Trusted Publishing. `npm.skipChecks` in .release-it.json skips the token
       # precheck that would otherwise fail without a logged-in user.

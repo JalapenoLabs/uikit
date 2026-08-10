@@ -29,7 +29,7 @@ concurrency:
 jobs:
   deploy:
     name: Build and deploy Storybook
-    runs-on: [ self-hosted, fedora ]
+    runs-on: [ self-hosted, rocky9 ]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

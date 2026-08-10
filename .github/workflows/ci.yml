@@ -23,7 +23,7 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.task }}
-    runs-on: [ self-hosted, fedora ]
+    runs-on: [ self-hosted, rocky9 ]
     strategy:
       fail-fast: false
       matrix:

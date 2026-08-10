@@ -41,7 +41,7 @@ permissions:
 jobs:
   release:
     name: Publish
-    runs-on: [ self-hosted, fedora ]
+    runs-on: [ self-hosted, rocky9 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

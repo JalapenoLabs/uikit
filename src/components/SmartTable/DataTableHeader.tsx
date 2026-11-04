@@ -1,6 +1,6 @@
 // Copyright © 2026 Jalapeno Labs
 
-import type { ManagedColumnTooltipMeta } from './DataTable.types'
+import type { ManagedColumnMeta } from './DataTable.types'
 import type { SmartTableLabels } from './labels'
 import type { RowData, Table } from '@tanstack/react-table'
 
@@ -45,7 +45,7 @@ export function DataTableHeader<TData extends RowData>(props: Props<TData>) {
                     const content = flexRender(header.column.columnDef.header, header.getContext())
                     // Third-party interop boundary: tooltip resolvers ride on
                     // tanstack's untyped `meta`, so narrow it back here.
-                    const meta = header.column.columnDef.meta as ManagedColumnTooltipMeta<TData> | undefined
+                    const meta = header.column.columnDef.meta as ManagedColumnMeta<TData> | undefined
                     const headerTooltip = meta?.headerTooltip
 
                     let inner = content

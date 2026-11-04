@@ -1,5 +1,6 @@
 // Copyright © 2026 Jalapeno Labs
 
+import type { DataTableCellOverflow } from './DataTable.types'
 import type { SmartTableLabels } from './labels'
 import type { Row, RowData, Table } from '@tanstack/react-table'
 
@@ -18,6 +19,11 @@ type Props<TData extends RowData> = {
   onHighlightedRowChange: (rowId: string | null) => void
   selectionDisabled: boolean
   enableRowHighlight: boolean
+  expandedRowId: string | null
+  onExpandedRowChange: (rowId: string | null) => void
+  cellLineClamp: number | false
+  cellOverflow: DataTableCellOverflow
+  onOpenCell: (rowId: string, columnId: string) => void
   getRowClassName?: (row: Row<TData>) => string | undefined
   searchTerm?: string
   labels: SmartTableLabels
@@ -33,6 +39,11 @@ export function DataTableBody<TData extends RowData>(props: Props<TData>) {
     onHighlightedRowChange,
     selectionDisabled,
     enableRowHighlight,
+    expandedRowId,
+    onExpandedRowChange,
+    cellLineClamp,
+    cellOverflow,
+    onOpenCell,
     getRowClassName,
     searchTerm,
     labels,
@@ -66,6 +77,11 @@ export function DataTableBody<TData extends RowData>(props: Props<TData>) {
               onHighlightedRowChange={onHighlightedRowChange}
               selectionDisabled={selectionDisabled}
               enableRowHighlight={enableRowHighlight}
+              isExpanded={expandedRowId === row.id}
+              onExpandedRowChange={onExpandedRowChange}
+              cellLineClamp={cellLineClamp}
+              cellOverflow={cellOverflow}
+              onOpenCell={onOpenCell}
               getRowClassName={getRowClassName}
               labels={labels}
             />
@@ -86,6 +102,11 @@ export function DataTableBody<TData extends RowData>(props: Props<TData>) {
           onHighlightedRowChange={onHighlightedRowChange}
           selectionDisabled={selectionDisabled}
           enableRowHighlight={enableRowHighlight}
+          isExpanded={expandedRowId === row.id}
+          onExpandedRowChange={onExpandedRowChange}
+          cellLineClamp={cellLineClamp}
+          cellOverflow={cellOverflow}
+          onOpenCell={onOpenCell}
           getRowClassName={getRowClassName}
           labels={labels}
         />

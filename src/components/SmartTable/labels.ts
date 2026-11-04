@@ -27,6 +27,8 @@ export type SmartTableLabels = {
   actions: string
   moreActions: string
   searchNoResults: string
+  // Closes a clamped cell's full content.
+  done: string
 
   // Footer
   rowsPerPage: string
@@ -51,6 +53,7 @@ export const defaultSmartTableLabels: SmartTableLabels = {
   actions: 'Actions',
   moreActions: 'More actions',
   searchNoResults: 'No results match your search.',
+  done: 'Done',
   rowsPerPage: 'Rows per page',
   pagination: 'Pagination',
   previousPage: 'Previous page',

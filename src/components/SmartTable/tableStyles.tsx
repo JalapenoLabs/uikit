@@ -482,6 +482,126 @@ export const smartTableCss = `
   white-space: pre-wrap;
 }
 
+/* ------------------------------ Cell clamp ------------------------------- */
+
+/* Long cells stop at a few lines (the line count is set inline) until their
+   row expands or the cell opens in a dialog. */
+.jala-table-cell-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--jala-table-clamp-lines, 3);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.jala-table-cell-clamp--expanded {
+  display: block;
+  -webkit-line-clamp: none;
+}
+
+/* -------------------------------- Dialog --------------------------------- */
+
+.jala-table-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(9, 9, 11, 0.55);
+}
+
+.jala-table-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(36rem, 100%);
+  max-height: min(40rem, calc(100vh - 2rem));
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 0.875rem;
+  background: var(--jala-table-panel-bg);
+  color: var(--jala-table-text);
+  box-shadow: var(--jala-table-shadow);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.jala-table-dialog:focus {
+  outline: none;
+}
+
+.jala-table-dialog-title {
+  margin: 0;
+  padding: 1.25rem 1.25rem 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--jala-table-text-strong);
+}
+
+.jala-table-dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1.25rem;
+}
+
+.jala-table-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.jala-table-cell-dialog-content {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* -------------------------------- Buttons -------------------------------- */
+
+.jala-table-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 36px;
+  padding: 0 1rem;
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 0.625rem;
+  background: transparent;
+  font: inherit;
+  font-weight: 500;
+  color: var(--jala-table-text-strong);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+.jala-table-button:hover:not(:disabled) {
+  background-color: var(--jala-table-row-active-bg);
+}
+
+.jala-table-button:focus-visible {
+  outline: 2px solid var(--jala-table-accent);
+  outline-offset: 2px;
+}
+
+.jala-table-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jala-table-button--primary {
+  border-color: var(--jala-table-accent);
+  background: var(--jala-table-accent);
+  color: #ffffff;
+}
+
+.jala-table-button--primary:hover:not(:disabled) {
+  background: var(--jala-table-accent);
+  opacity: 0.9;
+}
+
 /* -------------------------------- Toolbar -------------------------------- */
 
 .jala-table-toolbar {

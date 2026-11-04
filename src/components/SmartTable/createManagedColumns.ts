@@ -27,6 +27,8 @@ type CreateManagedColumnsOptions<TData extends RowData, TColumnKey extends strin
   // instead of a raw property on `row.original`. Return `null` to defer to
   // `searchKey`. See `DataTableManagedColumn.getSearchValue`.
   getSearchValue?: (columnKey: TColumnKey, columnIndex: number) => ((row: TData) => string | null) | null
+  // Optional: a column's own line clamp. See `DataTableManagedColumn.lineClamp`.
+  getLineClamp?: (columnKey: TColumnKey, columnIndex: number) => number | false | undefined
   createColumnDef: (params: CreateManagedColumnParams<TData, TColumnKey>) => ColumnDef<TData, unknown>
   columnDefOverrides?: Partial<Record<TColumnKey, ColumnDefOverride<TData, TColumnKey>>>
 }
@@ -46,6 +48,7 @@ export function createManagedColumns<TData extends RowData, TColumnKey extends s
     getColumnLabel = (columnKey) => String(columnKey),
     getSearchKey = (columnKey) => String(columnKey),
     getSearchValue,
+    getLineClamp,
     createColumnDef,
     columnDefOverrides,
   } = options
@@ -74,6 +77,7 @@ export function createManagedColumns<TData extends RowData, TColumnKey extends s
       columnLabel,
       searchKey,
       getSearchValue: searchValueResolver,
+      lineClamp: getLineClamp?.(columnKey, columnIndex),
       columnDef: {
         ...resolvedColumnDef,
         id: columnId,

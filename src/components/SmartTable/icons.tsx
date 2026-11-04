@@ -12,6 +12,7 @@ export type TableIconName =
   | 'chevronLeft'
   | 'chevronRight'
   | 'more'
+  | 'download'
   | 'spinner'
 
 // Every icon is drawn on a 24x24 grid with `currentColor` strokes so it
@@ -53,6 +54,11 @@ const pathsByIconName = {
     <circle cx='5' cy='12' r='1.5' fill='currentColor' stroke='none' />
     <circle cx='12' cy='12' r='1.5' fill='currentColor' stroke='none' />
     <circle cx='19' cy='12' r='1.5' fill='currentColor' stroke='none' />
+  </>,
+  download: <>
+    <path d='M12 4v11' />
+    <polyline points='7 10 12 15 17 10' />
+    <path d='M5 19h14' />
   </>,
   // A three-quarter ring; the `jala-table-spin` class turns it.
   spinner: <path d='M21 12a9 9 0 1 1-6.22-8.56' />,

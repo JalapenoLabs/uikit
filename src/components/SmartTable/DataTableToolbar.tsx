@@ -4,7 +4,7 @@ import type { SmartTableLabels } from './labels'
 import type { ReactNode } from 'react'
 
 // User interface
-import { TableIcon } from './icons'
+import { DataTableSearch } from './DataTableSearch'
 import { SmartTableStyles } from './tableStyles'
 
 // Misc
@@ -15,6 +15,8 @@ type Props = {
   onSearchChange?: (value: string) => void
   showSearch?: boolean
   isSearchDisabled?: boolean
+  isSearchLoading?: boolean
+  searchFocusHotkey?: boolean
   searchInputElementId?: string
   searchPlaceholder?: string
   showResultsCount?: boolean
@@ -31,6 +33,8 @@ export function DataTableToolbar(props: Props) {
     onSearchChange,
     showSearch = true,
     isSearchDisabled = false,
+    isSearchLoading = false,
+    searchFocusHotkey = true,
     searchInputElementId = 'table-search',
     searchPlaceholder,
     showResultsCount = true,
@@ -46,37 +50,23 @@ export function DataTableToolbar(props: Props) {
   return (
     <section className={[ 'jala-table-toolbar jala-table-theme', className ?? '' ].join(' ').trim()}>
       <SmartTableStyles />
-      <div className='jala-table-toolbar-group'>
+      <div
+        className={[
+          'jala-table-toolbar-group',
+          showSearch ? 'jala-table-toolbar-group--search' : '',
+        ].join(' ').trim()}
+      >
         { showSearch
-          ? (
-            <div className='jala-table-search'>
-              <span className='jala-table-search-icon'>
-                <TableIcon name='search' size={16} />
-              </span>
-              <input
-                type='search'
-                className='jala-table-search-input'
-                id={searchInputElementId}
-                placeholder={resolvedPlaceholder}
-                disabled={isSearchDisabled}
-                value={searchValue}
-                onChange={(event) => onSearchChange?.(event.target.value)}
-              />
-              { searchValue.length
-                ? (
-                  <button
-                    type='button'
-                    className='jala-table-search-clear'
-                    aria-label={labels.clearSearch}
-                    onClick={() => onSearchChange?.('')}
-                  >
-                    <TableIcon name='close' size={16} />
-                  </button>
-                )
-                : null
-              }
-            </div>
-          )
+          ? <DataTableSearch
+            value={searchValue}
+            onChange={(value) => onSearchChange?.(value)}
+            inputId={searchInputElementId}
+            placeholder={resolvedPlaceholder}
+            labels={labels}
+            isDisabled={isSearchDisabled}
+            isLoading={isSearchLoading}
+            focusHotkey={searchFocusHotkey}
+          />
           : null
         }
         { leftSlot }

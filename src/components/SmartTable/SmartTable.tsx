@@ -16,22 +16,33 @@ import type {
   RowData,
   RowSelectionState,
   SortingState,
+  Table,
   VisibilityState,
 } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
 // Core
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useDataTableState } from './useDataTableState'
 import { useScrollPositionRestore } from '../../hooks/useScrollPositionRestore'
 
 // User interface
 import { DataTable } from './DataTable'
 import { DataTableColumnControls } from './DataTableColumnControls'
+import { DataTableSearch } from './DataTableSearch'
 import { DataTableToolbar } from './DataTableToolbar'
+import { TableIcon } from './icons'
+import { SmartTableStyles } from './tableStyles'
+import { TableTooltip } from './TableTooltip'
 
 // Utility
 import { isEqual } from 'lodash-es'
+import { downloadCsv } from '../../utils/csv'
+
+// Misc
+import { buildTableCsv } from './exportTableCsv'
+import { defaultSmartTableLabels } from './labels'
 
 type SmartTableIds = {
   tableElementId: string
@@ -46,14 +57,35 @@ type SmartTablePersistence = {
 }
 
 type SmartTableSearch = {
+  // Leave `value` out and the table keeps the search text itself.
   value?: string
   onChange?: (value: string) => void
   show?: boolean
   isDisabled?: boolean
   placeholder?: string
+  // Swaps the magnifying glass for a spinner, while a search waits on a server.
+  isLoading?: boolean
+  // Ctrl+F focuses the search field instead of the browser's find (default on).
+  focusHotkey?: boolean
+}
+
+// Where the table's controls (search, filters, columns, export) render
+// instead of its own toolbar, such as a page's titlebar. The table keeps all
+// of their state. `container` is null until the target element mounts.
+export type SmartTableControlsTarget = {
+  container: Element | null
+}
+
+// A one-click CSV export of the rows the user sees: filtered, sorted, and
+// across every page. See `DataTableManagedColumn.exportValue`.
+export type SmartTableCsvExport = {
+  fileName: string | (() => string)
+  show?: boolean
 }
 
 type SmartTableToolbar = {
+  // `false` hides the search field, results count, and slots. The table's
+  // own controls (filters, columns, export) stay, so none is ever lost.
   show?: boolean
   className?: string
   showResultsCount?: boolean
@@ -107,6 +139,8 @@ export type SmartTableProps<TData extends RowData> = {
   cellLineClamp?: number | false
   cellOverflow?: DataTableCellOverflow
   search?: SmartTableSearch
+  controls?: SmartTableControlsTarget
+  csvExport?: SmartTableCsvExport
   toolbar?: SmartTableToolbar
   columnControls?: SmartTableColumnControls
   pagination?: SmartTablePagination
@@ -194,6 +228,8 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     sorting: sortingProp,
     onSortingChange: onSortingChangeProp,
     search: searchConfig,
+    controls,
+    csvExport,
     toolbar: toolbarConfig,
     columnControls: columnControlsConfig,
     pagination: paginationConfig,
@@ -239,7 +275,18 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
   const columnControlsButtonId = ids.columnControlsButtonId ?? `${tableElementId}-columns`
   const defaultHiddenColumnIds = persistence?.defaultHiddenColumnIds ?? []
 
-  const searchValue = searchConfig?.value ?? ''
+  const [ ownSearchValue, setOwnSearchValue ] = useState('')
+  const searchValue = searchConfig?.value ?? ownSearchValue
+  const onSearchChangeProp = searchConfig?.onChange
+  const isSearchOwned = searchConfig?.value === undefined
+  const handleSearchChange = useCallback((value: string) => {
+    if (isSearchOwned) {
+      setOwnSearchValue(value)
+    }
+    onSearchChangeProp?.(value)
+  }, [ isSearchOwned, onSearchChangeProp ])
+  const resolvedLabels = useMemo(() => ({ ...defaultSmartTableLabels, ...labels }), [ labels ])
+  const tableRef = useRef<Table<TData> | null>(null)
   const showSearch = searchConfig?.show ?? true
   const showToolbar = toolbarConfig?.show ?? true
   const showResultsCount = toolbarConfig?.showResultsCount ?? true
@@ -314,25 +361,110 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
   const scrollContainerRef = useScrollPositionRestore(persistentPosition ? scrollStorageKey : '')
 
   const shouldRenderColumnControls = showColumnControls && (enableColumnVisibility || enableColumnOrder)
-  const toolbarRightSlot = shouldRenderColumnControls
-    ? (
-      <>
-        { toolbarConfig?.rightSlot }
-        <DataTableColumnControls
-          buttonId={columnControlsButtonId}
-          orderedColumnIds={orderedColumnIds}
-          columnLabels={columnLabels}
-          columnVisibility={columnVisibility}
-          setColumnVisibility={setColumnVisibility}
-          setColumnOrder={setColumnOrder}
-          canToggleVisibility={enableColumnVisibility}
-          canReorderColumns={enableColumnOrder}
-          isDisabled={columnControlsDisabled || isDisabled}
-          labels={labels}
-        />
-      </>
-    )
-    : toolbarConfig?.rightSlot
+  const columnsElement = shouldRenderColumnControls
+    ? <DataTableColumnControls
+      buttonId={columnControlsButtonId}
+      orderedColumnIds={orderedColumnIds}
+      columnLabels={columnLabels}
+      columnVisibility={columnVisibility}
+      setColumnVisibility={setColumnVisibility}
+      setColumnOrder={setColumnOrder}
+      canToggleVisibility={enableColumnVisibility}
+      canReorderColumns={enableColumnOrder}
+      isDisabled={columnControlsDisabled || isDisabled}
+      labels={labels}
+    />
+    : null
+
+  function handleExport() {
+    const table = tableRef.current
+    if (!csvExport || !table) {
+      console.warn('SmartTable export was pressed before its table rendered; nothing was exported', ids)
+      return
+    }
+    const fileName = typeof csvExport.fileName === 'function'
+      ? csvExport.fileName()
+      : csvExport.fileName
+    downloadCsv(fileName, buildTableCsv(table, managedColumns))
+  }
+
+  const exportElement = csvExport && csvExport.show !== false
+    ? <TableTooltip content={resolvedLabels.exportCsv} placement={{ side: 'bottom', align: 'center' }}>
+      <button
+        type='button'
+        className='jala-table-icon-button'
+        aria-label={resolvedLabels.exportCsv}
+        disabled={isDisabled || filteredRowCount === 0}
+        onClick={handleExport}
+      >
+        <TableIcon name='download' size={18} />
+      </button>
+    </TableTooltip>
+    : null
+
+  const searchElement = showSearch
+    ? <DataTableSearch
+      value={searchValue}
+      onChange={handleSearchChange}
+      inputId={searchInputElementId}
+      placeholder={searchConfig?.placeholder ?? resolvedLabels.searchPlaceholder}
+      labels={resolvedLabels}
+      isDisabled={searchConfig?.isDisabled}
+      isLoading={searchConfig?.isLoading}
+      focusHotkey={searchConfig?.focusHotkey}
+    />
+    : null
+
+  const hasTableControls = Boolean(columnsElement || exportElement)
+
+  // The controls render in one of three places: a consumer's container (such
+  // as the page titlebar), the table's own toolbar, or, with the toolbar
+  // hidden, a small strip above the table, so the Columns chooser and export
+  // are never lost.
+  let controlsArea: ReactNode = null
+  if (controls) {
+    controlsArea = controls.container
+      ? createPortal(
+        <div className='jala-table-controls jala-table-theme'>
+          <SmartTableStyles />
+          { searchElement }
+          { columnsElement }
+          { exportElement }
+        </div>,
+        controls.container,
+      )
+      : null
+  }
+  else if (showToolbar) {
+    controlsArea = <DataTableToolbar
+      searchValue={searchValue}
+      onSearchChange={handleSearchChange}
+      showSearch={showSearch}
+      isSearchDisabled={searchConfig?.isDisabled ?? false}
+      isSearchLoading={searchConfig?.isLoading}
+      searchFocusHotkey={searchConfig?.focusHotkey}
+      searchInputElementId={searchInputElementId}
+      searchPlaceholder={searchConfig?.placeholder}
+      showResultsCount={showResultsCount}
+      resultsCount={toolbarConfig?.resultsCount ?? filteredRowCount}
+      leftSlot={toolbarConfig?.leftSlot}
+      rightSlot={toolbarConfig?.rightSlot || hasTableControls
+        ? <>
+          { toolbarConfig?.rightSlot }
+          { columnsElement }
+          { exportElement }
+        </>
+        : null}
+      className={toolbarConfig?.className}
+      labels={labels}
+    />
+  }
+  else if (hasTableControls) {
+    controlsArea = <div className='jala-table-controls jala-table-controls--strip jala-table-theme'>
+      { columnsElement }
+      { exportElement }
+    </div>
+  }
 
   // Any change to the search, filters, or sorting invalidates the current page
   // position, so hop back to the first page.
@@ -381,25 +513,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
 
   return (
     <>
-      { showToolbar
-        ? (
-          <DataTableToolbar
-            searchValue={searchValue}
-            onSearchChange={searchConfig?.onChange}
-            showSearch={showSearch}
-            isSearchDisabled={searchConfig?.isDisabled ?? false}
-            searchInputElementId={searchInputElementId}
-            searchPlaceholder={searchConfig?.placeholder}
-            showResultsCount={showResultsCount}
-            resultsCount={toolbarConfig?.resultsCount ?? filteredRowCount}
-            leftSlot={toolbarConfig?.leftSlot}
-            rightSlot={toolbarRightSlot}
-            className={toolbarConfig?.className}
-            labels={labels}
-          />
-        )
-        : null
-      }
+      { controlsArea }
       <DataTable
         tableElementId={tableElementId}
         tableAriaLabel={tableAriaLabel}
@@ -448,6 +562,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
         cellOverflow={cellOverflow}
         onFilteredRowCountChange={setFilteredRowCount}
         scrollContainerRef={persistentPosition ? scrollContainerRef : undefined}
+        tableRef={tableRef}
         stickyScrollbar={stickyScrollbar}
         stickyHeader={stickyHeader}
       />

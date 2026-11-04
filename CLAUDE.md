@@ -127,7 +127,8 @@ Jalapeno Labs and rewritten to the conventions above.
   usePagination, useScrollOnMount, useScrollPositionRestore, useHotkey,
   useMediaQuery
 - Utils: clipText, getErrorMessage, getLast, percent, reorderArray, stringify,
-  formatBytes, singleThreadedInterval, setTimeoutToNextSecond, fuzzyMatch, hotkeys
+  formatBytes, singleThreadedInterval, setTimeoutToNextSecond, fuzzyMatch, hotkeys,
+  csv
 
 **SmartTable (done):** the legacy `mooretable` package, ported whole as
 `src/components/SmartTable/`. `SmartTable` (was `TableKit`) is the
@@ -170,6 +171,20 @@ made during the port:
   click on one waits `DOUBLE_CLICK_WINDOW_MS` so the double-click can win.
 - Clicks on links, buttons, and form fields inside a row are their own, never
   the row's.
+- Controls (search, filters, Columns, export) render in one of three places:
+  `controls.container` (a portal target such as a page titlebar; the table
+  keeps their state, and nothing renders while it is null), the table's own
+  toolbar, or, with `toolbar.show: false`, a strip above the table. Hiding the
+  toolbar hides the search, results count, and slots, never the Columns
+  chooser or export; `columnControls.show: false` removes Columns on purpose.
+- The search keeps its own text unless `search.value` is passed, starts narrow
+  and widens once it holds text, fills the width on phones, shows a spinner
+  for `search.isLoading`, and takes Ctrl+F unless focus is in a text field.
+- `csvExport` adds a one-click export (`toCsv` / `downloadCsv` in
+  `src/utils/csv.ts`) of the filtered, sorted rows across every page under the
+  visible columns. A column exports `exportValue` or its raw accessor value;
+  `exportValue: null` leaves it out. Text a spreadsheet would run as a formula
+  gets a leading apostrophe.
 
 **Backlog (good next candidates, each adds a dependency or needs decoupling):**
 - `MarkdownContent` (react-markdown + remark-gfm + rehype-raw)

@@ -78,10 +78,15 @@ export { ChangerButton } from './components/ChangerButton/ChangerButton'
 export type { ChangerButtonProps } from './components/ChangerButton/ChangerButton'
 
 export { SmartTable } from './components/SmartTable/SmartTable'
-export type { SmartTableProps } from './components/SmartTable/SmartTable'
+export type {
+  SmartTableCsvExport,
+  SmartTableControlsTarget,
+  SmartTableProps,
+} from './components/SmartTable/SmartTable'
 export { DataTable } from './components/SmartTable/DataTable'
 export type {
   DataTableAction,
+  DataTableCellOverflow,
   DataTableManagedColumn,
   DataTablePaginationConfig,
   DataTableProps,
@@ -89,6 +94,8 @@ export type {
   DataTableRowReorderPayload,
 } from './components/SmartTable/DataTable.types'
 export { DataTableToolbar } from './components/SmartTable/DataTableToolbar'
+export { DataTableSearch } from './components/SmartTable/DataTableSearch'
+export { buildTableCsv } from './components/SmartTable/exportTableCsv'
 export { DataTableColumnControls } from './components/SmartTable/DataTableColumnControls'
 export { DataTableTextCell } from './components/SmartTable/DataTableTextCell'
 export type { DataTableTextCellProps } from './components/SmartTable/DataTableTextCell'
@@ -144,6 +151,8 @@ export { validAbsoluteLinuxFilePathRegex, dotEnvEntryRegex } from './utils/regex
 export { parseJsonSafe, stringifyJsonSafe } from './utils/json'
 export type { Validator } from './utils/json'
 export { deepDiff } from './utils/deepDiff'
+export { toCsv, downloadCsv } from './utils/csv'
+export type { CsvValue } from './utils/csv'
 export type { Difference } from './utils/deepDiff'
 
 // ///////////////////////////// //

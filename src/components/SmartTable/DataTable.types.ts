@@ -11,11 +11,13 @@ import type {
   RowData,
   RowSelectionState,
   SortingState,
+  Table,
   VisibilityState,
 } from '@tanstack/react-table'
-import type { ReactNode, RefObject } from 'react'
+import type { MutableRefObject, ReactNode, RefObject } from 'react'
 import type { SmartTableLabels } from './labels'
 import type { Promisable } from '../../types'
+import type { CsvValue } from '../../utils/csv'
 
 export type DataTableAction<TData extends RowData> = {
   id: string
@@ -69,6 +71,10 @@ export type DataTableManagedColumn<TData extends RowData> = {
   // table's `cellLineClamp`; `false` never clamps (for cells that are always
   // short, or that manage their own height).
   lineClamp?: number | false
+  // The column's value in a CSV export. Without it the export takes the
+  // column's raw accessor value; give one for display-only cells or cells
+  // whose accessor is a sort key, and `null` to leave the column out.
+  exportValue?: ((row: TData) => CsvValue) | null
   columnDef: ColumnDef<TData, unknown>
 }
 
@@ -134,6 +140,9 @@ export type DataTableProps<TData extends RowData> = {
   getRowClassName?: (row: Row<TData>) => string | undefined
   onFilteredRowCountChange?: (count: number) => void
   scrollContainerRef?: RefObject<HTMLElement>
+  // Receives the TanStack table instance, for controls that live outside the
+  // table, such as the CSV export.
+  tableRef?: MutableRefObject<Table<TData> | null>
   stickyScrollbar?: boolean
   stickyHeader?: boolean
 }

@@ -284,6 +284,47 @@ export const WithLongCellsInModal: Story = {
   render: () => <SmartTableStory managedColumns={bioColumns} cellOverflow='modal' />,
 }
 
+const titlebarStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 16,
+  flexWrap: 'wrap',
+  marginBottom: 16,
+} as const
+
+// The table's search, columns, and export in a page titlebar, through
+// `controls.container`. The table keeps their state.
+export const InTitlebar: Story = {
+  render: function InTitlebarStory() {
+    const [ container, setContainer ] = useState<HTMLDivElement | null>(null)
+
+    return <div>
+      <header style={titlebarStyle}>
+        <h1 style={{ margin: 0, fontSize: 28 }}>People</h1>
+        <div ref={setContainer} style={{ display: 'contents' }} />
+      </header>
+      <SmartTable
+        ids={{
+          tableElementId: 'story-titlebar-table',
+          tableLocalStorageId: 'story-titlebar-table',
+        }}
+        tableAriaLabel='People'
+        data={people}
+        managedColumns={columns}
+        getRowId={(row) => row.id}
+        controls={{ container }}
+        csvExport={{ fileName: 'people' }}
+      />
+    </div>
+  },
+}
+
+// Without a toolbar the Columns chooser and export still sit above the table.
+export const WithoutToolbar: Story = {
+  render: () => <SmartTableStory toolbar={{ show: false }} csvExport={{ fileName: 'people' }} />,
+}
+
 export const Localized: Story = {
   render: () => <SmartTableStory
     labels={{

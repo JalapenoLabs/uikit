@@ -2,6 +2,7 @@
 
 import type { DataTableManagedColumn } from './DataTable.types'
 import type { ColumnDef, RowData } from '@tanstack/react-table'
+import type { CsvValue } from '../../utils/csv'
 
 type CreateManagedColumnParams<TData extends RowData, TColumnKey extends string> = {
   columnKey: TColumnKey
@@ -29,6 +30,8 @@ type CreateManagedColumnsOptions<TData extends RowData, TColumnKey extends strin
   getSearchValue?: (columnKey: TColumnKey, columnIndex: number) => ((row: TData) => string | null) | null
   // Optional: a column's own line clamp. See `DataTableManagedColumn.lineClamp`.
   getLineClamp?: (columnKey: TColumnKey, columnIndex: number) => number | false | undefined
+  // Optional: a column's CSV export value. See `DataTableManagedColumn.exportValue`.
+  getExportValue?: (columnKey: TColumnKey, columnIndex: number) => ((row: TData) => CsvValue) | null | undefined
   createColumnDef: (params: CreateManagedColumnParams<TData, TColumnKey>) => ColumnDef<TData, unknown>
   columnDefOverrides?: Partial<Record<TColumnKey, ColumnDefOverride<TData, TColumnKey>>>
 }
@@ -49,6 +52,7 @@ export function createManagedColumns<TData extends RowData, TColumnKey extends s
     getSearchKey = (columnKey) => String(columnKey),
     getSearchValue,
     getLineClamp,
+    getExportValue,
     createColumnDef,
     columnDefOverrides,
   } = options
@@ -78,6 +82,7 @@ export function createManagedColumns<TData extends RowData, TColumnKey extends s
       searchKey,
       getSearchValue: searchValueResolver,
       lineClamp: getLineClamp?.(columnKey, columnIndex),
+      exportValue: getExportValue?.(columnKey, columnIndex),
       columnDef: {
         ...resolvedColumnDef,
         id: columnId,

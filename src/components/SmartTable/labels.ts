@@ -14,6 +14,7 @@ export type SmartTableLabels = {
 
   // Column controls
   columns: string
+  exportCsv: string
 
   // Header
   sort: string
@@ -44,6 +45,7 @@ export const defaultSmartTableLabels: SmartTableLabels = {
     ? '1 result'
     : `${count} results`,
   columns: 'Columns',
+  exportCsv: 'Export CSV',
   sort: 'Sort',
   sortAscending: 'Sorted ascending',
   sortDescending: 'Sorted descending',

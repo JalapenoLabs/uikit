@@ -29,6 +29,27 @@ export type SmartTableLabels = {
   removeFilter: (tagText: string) => string
   activeFilterCount: (count: number) => string
 
+  // Multi-select
+  selectionBar: string
+  selectedCount: (count: number) => string
+  // Selects every row on the page (the bar's button, and Ctrl+A).
+  selectPage: string
+  clearSelection: string
+  // The X's tooltip, which also names its hotkey.
+  clearSelectionHint: string
+  pageSelected: (pageRowCount: number) => string
+  selectEverything: (totalRowCount: number) => string
+  everythingSelected: (totalRowCount: number) => string
+  // A choice action's choice in the overflow menu, such as "Status: Done".
+  choiceItem: (actionLabel: string, choiceLabel: string) => string
+  bulkEdit: string
+  bulkEditTitle: (count: number) => string
+  bulkEditNothingChosen: string
+  keepAsIs: string
+  setTo: string
+  clearField: string
+  applyBulkEdit: (count: number) => string
+
   // Header
   sort: string
   sortAscending: string
@@ -71,6 +92,26 @@ export const defaultSmartTableLabels: SmartTableLabels = {
   activeFilterCount: (count) => count === 1
     ? '1 filter on'
     : `${count} filters on`,
+  selectionBar: 'Selection',
+  selectedCount: (count) => `${count} selected`,
+  selectPage: 'Select all',
+  clearSelection: 'Clear selection',
+  clearSelectionHint: 'Clear selection (Esc)',
+  pageSelected: (pageRowCount) => pageRowCount === 1
+    ? 'The 1 row on this page is selected.'
+    : `All ${pageRowCount} rows on this page are selected.`,
+  selectEverything: (totalRowCount) => `Select all ${totalRowCount}`,
+  everythingSelected: (totalRowCount) => `All ${totalRowCount} rows are selected.`,
+  choiceItem: (actionLabel, choiceLabel) => `${actionLabel}: ${choiceLabel}`,
+  bulkEdit: 'Edit fields',
+  bulkEditTitle: (count) => count === 1
+    ? 'Edit 1 row'
+    : `Edit ${count} rows`,
+  bulkEditNothingChosen: 'Choose a field to change',
+  keepAsIs: 'Keep as is',
+  setTo: 'Set to',
+  clearField: 'Clear',
+  applyBulkEdit: (count) => `Apply to ${count}`,
   sort: 'Sort',
   sortAscending: 'Sorted ascending',
   sortDescending: 'Sorted descending',

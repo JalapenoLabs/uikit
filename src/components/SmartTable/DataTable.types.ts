@@ -39,6 +39,66 @@ export type DataTableAction<TData extends RowData> = {
   isVisible?: boolean | ((row: Row<TData>) => boolean)
 }
 
+// One choice in a bulk action's drop-up, such as a status to set.
+export type DataTableSelectionChoice = {
+  value: string
+  label: string
+  icon?: ReactNode
+}
+
+type DataTableSelectionActionBase = {
+  id: string
+  // What the action does, already translated, such as "Delete selected".
+  label: string
+  icon?: ReactNode
+  // Dangerous actions sit last in the overflow menu, in red.
+  isDanger?: boolean
+  isDisabled?: boolean
+}
+
+// An action on the floating selection bar. It receives the selected rows that
+// pass the search and filters, across every page. Returning a promise shows it
+// loading and holds the bar's other actions until it settles. An action with
+// `choices` opens a drop-up of them, such as "Change status", and applies the
+// one picked to every selected row.
+export type DataTableSelectionAction<TData extends RowData> = DataTableSelectionActionBase & (
+  | {
+    onPress: (rows: TData[]) => Promisable<void>
+    choices?: undefined
+    onChoose?: undefined
+  }
+  | {
+    choices: DataTableSelectionChoice[]
+    onChoose: (value: string, rows: TData[]) => Promisable<void>
+    onPress?: undefined
+  }
+)
+
+// A field the bulk edit dialog can change across the selected rows.
+export type DataTableBulkEditField = {
+  id: string
+  label: string
+  kind: 'text' | 'textarea' | 'select'
+  // The choices of a `select` field.
+  options?: DataTableSelectionChoice[]
+  // Whether the field offers "Clear" beside "Keep as is" and "Set to" (default true).
+  canClear?: boolean
+}
+
+export type DataTableBulkEditChange =
+  | { mode: 'set', value: string }
+  | { mode: 'clear' }
+
+// The fields the user chose to change; fields kept as they are are absent.
+export type DataTableBulkEditChanges = Record<string, DataTableBulkEditChange>
+
+// Adds "Edit fields" to the selection bar: a dialog where each field is kept
+// as is, set to a value, or cleared, committed together for every selected row.
+export type DataTableBulkEdit<TData extends RowData> = {
+  fields: DataTableBulkEditField[]
+  onApply: (changes: DataTableBulkEditChanges, rows: TData[]) => Promisable<void>
+}
+
 // How row actions show: `hover` reveals icon buttons over the right of the
 // hovered row, `menu` keeps an ellipsis menu on every row, and `auto` picks
 // `menu` on touch and narrow screens, which cannot hover, and `hover` elsewhere.
@@ -106,9 +166,14 @@ export type DataTableProps<TData extends RowData> = {
   isDisabled?: boolean
   // Overrides for the table's user-facing strings (English by default).
   labels?: Partial<SmartTableLabels>
+  // Multi-select, on screens wider than a phone. Selection is the consumer's:
+  // pass `rowSelection` and `onRowSelectionChange` with it.
   enableSelection?: boolean
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
+  // The floating selection bar's actions, and its "Edit fields" dialog.
+  selectionActions?: DataTableSelectionAction<TData>[]
+  bulkEdit?: DataTableBulkEdit<TData>
   columnFilters?: ColumnFiltersState
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
   enableSorting?: boolean

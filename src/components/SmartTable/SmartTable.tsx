@@ -2,10 +2,12 @@
 
 import type {
   DataTableAction,
+  DataTableBulkEdit,
   DataTableCellOverflow,
   DataTableManagedColumn,
   DataTableRowActionsLayout,
   DataTableRowReorderPayload,
+  DataTableSelectionAction,
 } from './DataTable.types'
 import type { SmartTableFilter, SmartTableFilterValues } from './filters'
 import type { SmartTableLabels } from './labels'
@@ -133,6 +135,8 @@ export type SmartTableProps<TData extends RowData> = {
   enableSelection?: boolean
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
+  selectionActions?: DataTableSelectionAction<TData>[]
+  bulkEdit?: DataTableBulkEdit<TData>
   columnFilters?: ColumnFiltersState
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
   sorting?: SortingState
@@ -262,6 +266,8 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     enableSelection = false,
     rowSelection,
     onRowSelectionChange,
+    selectionActions,
+    bulkEdit,
     columnFilters,
     onColumnFiltersChange,
     enableSorting = true,
@@ -620,6 +626,8 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
         enableSelection={enableSelection}
         rowSelection={rowSelection}
         onRowSelectionChange={onRowSelectionChange}
+        selectionActions={selectionActions}
+        bulkEdit={bulkEdit}
         columnFilters={columnFilters}
         onColumnFiltersChange={onColumnFiltersChange}
         enableSorting={enableSorting}

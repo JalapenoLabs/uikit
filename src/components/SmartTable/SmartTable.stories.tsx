@@ -111,10 +111,18 @@ export const Basic: Story = {
   render: () => <SmartTableStory />,
 }
 
+// Select rows to open the floating bar along the bottom: Select all, the
+// table's actions (overflowing into "..." on narrow screens), and an X. Shift
+// selects a range, Ctrl+A selects all, Ctrl+Z undoes, Escape clears. With a
+// whole page selected, a banner offers every row across the pages.
 export const WithSelection: Story = {
   render: function WithSelectionStory() {
-    const [ search, setSearch ] = useState('')
     const [ rowSelection, setRowSelection ] = useState({})
+    const manyPeople = Array.from({ length: 23 }, (_unused, index) => ({
+      ...people[index % people.length],
+      id: String(index + 1),
+      name: `${people[index % people.length].name} ${index + 1}`,
+    }))
 
     return <SmartTable
       ids={{
@@ -122,13 +130,48 @@ export const WithSelection: Story = {
         tableLocalStorageId: 'story-selectable-table',
       }}
       tableAriaLabel='People'
-      data={people}
+      data={manyPeople}
       managedColumns={columns}
       getRowId={(row) => row.id}
-      search={{ value: search, onChange: setSearch }}
+      pagination={{ show: true, initialPageSize: 10 }}
       enableSelection
       rowSelection={rowSelection}
       onRowSelectionChange={setRowSelection}
+      selectionActions={[
+        {
+          id: 'team',
+          label: 'Change team',
+          icon: <StoryIcon path='M4 6h16M4 12h16M4 18h16' />,
+          choices: [ 'Compilers', 'Languages', 'Propulsion' ].map((team) => ({ value: team, label: team })),
+          onChoose: (team, rows) => console.log('Change team', team, rows),
+        },
+        {
+          id: 'archive',
+          label: 'Archive',
+          icon: <StoryIcon path='M3 7h18M5 7v13h14V7M9 11h6' />,
+          onPress: () => new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+        },
+        {
+          id: 'delete',
+          label: 'Delete',
+          icon: <StoryIcon path='M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13' />,
+          isDanger: true,
+          onPress: (rows) => console.log('Delete', rows),
+        },
+      ]}
+      bulkEdit={{
+        fields: [
+          { id: 'role', label: 'Role', kind: 'text' },
+          { id: 'bio', label: 'Biography', kind: 'textarea' },
+          {
+            id: 'team',
+            label: 'Team',
+            kind: 'select',
+            options: [ 'Compilers', 'Languages' ].map((team) => ({ value: team, label: team })),
+          },
+        ],
+        onApply: (changes, rows) => console.log('Bulk edit', changes, rows),
+      }}
     />
   },
 }

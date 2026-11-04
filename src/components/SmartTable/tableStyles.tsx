@@ -942,6 +942,133 @@ export const smartTableCss = `
   outline: 2px solid var(--jala-table-accent);
 }
 
+/* ------------------------------ Multi-select ----------------------------- */
+
+/* Floats along the bottom of the page, centered, never wider than the screen. */
+.jala-table-selection-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 32px);
+  padding: 6px 8px;
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 14px;
+  background: var(--jala-table-panel-bg);
+  color: var(--jala-table-text);
+  box-shadow: var(--jala-table-shadow);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  animation: jala-table-bar-in 160ms ease-out;
+}
+
+@keyframes jala-table-bar-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jala-table-selection-bar {
+    animation: none;
+  }
+}
+
+.jala-table-selection-bar-section {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.jala-table-selection-actions {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.jala-table-selection-count {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: var(--jala-table-text-strong);
+}
+
+.jala-table-selection-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--jala-table-panel-border);
+}
+
+/* Room below the table while the bar floats, so its last rows and pages can
+   scroll out from under it. */
+.jala-table-root--selecting {
+  padding-bottom: 4.5rem;
+}
+
+/* The copy every action is measured from: laid out, never seen. */
+.jala-table-selection-measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 4px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.jala-table-menu-trigger--danger {
+  color: var(--jala-table-danger);
+}
+
+.jala-table-menu-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jala-table-select-all-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.625rem;
+  background: var(--jala-table-row-active-bg);
+  color: var(--jala-table-text);
+  font-size: 0.875rem;
+}
+
+.jala-table-link-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: var(--jala-table-accent);
+  cursor: pointer;
+}
+
+.jala-table-link-button:hover {
+  text-decoration: underline;
+}
+
+.jala-table-link-button:focus-visible {
+  outline: 2px solid var(--jala-table-accent);
+  outline-offset: 2px;
+}
+
+.jala-table-textarea {
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  resize: vertical;
+}
+
 /* ----------------------------- Column controls --------------------------- */
 
 .jala-table-columns {

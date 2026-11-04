@@ -632,11 +632,36 @@ export const smartTableCss = `
   color: var(--jala-table-text-muted);
 }
 
+/* The search starts narrow, widens once it holds text, and fills the width on
+   phones (ux.md, Table layout). */
 .jala-table-search {
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-width: 16rem;
+  width: 14rem;
+  max-width: 100%;
+  transition: width 200ms ease;
+}
+
+.jala-table-search--filled {
+  width: 22rem;
+}
+
+@media (max-width: 640px) {
+  .jala-table-search,
+  .jala-table-search--filled {
+    width: 100%;
+  }
+
+  .jala-table-toolbar-group--search {
+    flex: 1 1 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jala-table-search {
+    transition: none;
+  }
 }
 
 .jala-table-search-icon {
@@ -694,34 +719,44 @@ export const smartTableCss = `
   color: var(--jala-table-text);
 }
 
+/* ------------------------- Controls outside a toolbar --------------------- */
+
+/* The table's controls in a consumer's container, such as a page titlebar:
+   one row, search first, then the icon buttons. */
+.jala-table-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  color: var(--jala-table-text);
+}
+
+.jala-table-controls .jala-table-search {
+  margin-right: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .jala-table-controls {
+    width: 100%;
+  }
+
+  .jala-table-controls .jala-table-search {
+    flex: 1 1 100%;
+    margin-right: 0;
+  }
+}
+
+/* With the toolbar hidden, the remaining controls sit right above the table. */
+.jala-table-controls--strip {
+  margin-bottom: 0.5rem;
+}
+
 /* ----------------------------- Column controls --------------------------- */
 
 .jala-table-columns {
   position: relative;
   display: inline-flex;
-}
-
-.jala-table-columns-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: transparent;
-  font: inherit;
-  color: var(--jala-table-text-strong);
-  cursor: pointer;
-  transition: background-color 150ms ease;
-}
-
-.jala-table-columns-button:hover {
-  background-color: var(--jala-table-row-active-bg);
-}
-
-.jala-table-columns-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .jala-table-columns-popover {

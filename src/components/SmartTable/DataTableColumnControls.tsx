@@ -23,6 +23,7 @@ import { CSS } from '@dnd-kit/utilities'
 // User interface
 import { TableIcon } from './icons'
 import { SmartTableStyles } from './tableStyles'
+import { TableTooltip } from './TableTooltip'
 
 // Misc
 import { defaultSmartTableLabels } from './labels'
@@ -123,7 +124,7 @@ type Props = {
 }
 
 /**
- * The "Columns" toolbar button plus its popover: a checkbox list to toggle
+ * The icon-only "Columns" button plus its popover: a checkbox list to toggle
  * column visibility and drag handles to reorder columns. The popover closes on
  * outside-click and on Escape.
  */
@@ -215,19 +216,21 @@ export function DataTableColumnControls(props: Props) {
   return (
     <div className='jala-table-columns jala-table-theme' ref={wrapperRef}>
       <SmartTableStyles />
-      <button
-        type='button'
-        className='jala-table-columns-button'
-        id={buttonId}
-        aria-haspopup='dialog'
-        aria-expanded={isOpen}
-        aria-controls={popoverId}
-        disabled={isDisabled || !hasColumns}
-        onClick={() => setIsOpen((previousIsOpen) => !previousIsOpen)}
-      >
-        <TableIcon name='columns' size={18} />
-        <span>{ labels.columns }</span>
-      </button>
+      <TableTooltip content={labels.columns} placement={{ side: 'bottom', align: 'center' }}>
+        <button
+          type='button'
+          className='jala-table-icon-button'
+          id={buttonId}
+          aria-label={labels.columns}
+          aria-haspopup='dialog'
+          aria-expanded={isOpen}
+          aria-controls={popoverId}
+          disabled={isDisabled || !hasColumns}
+          onClick={() => setIsOpen((previousIsOpen) => !previousIsOpen)}
+        >
+          <TableIcon name='columns' size={18} />
+        </button>
+      </TableTooltip>
       { isOpen
         ? (
           <div

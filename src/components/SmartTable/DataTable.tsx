@@ -17,7 +17,7 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import type { RefObject } from 'react'
 
 // Core
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -133,6 +133,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     getRowClassName,
     onFilteredRowCountChange,
     scrollContainerRef,
+    tableRef,
     stickyScrollbar = false,
     stickyHeader = false,
   } = props
@@ -466,6 +467,14 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
         ? tableColumnOrder
         : undefined,
     },
+  })
+
+  // Hand the instance to controls outside the table after each render, so
+  // they always read the rows the user is looking at.
+  useLayoutEffect(() => {
+    if (tableRef) {
+      tableRef.current = table
+    }
   })
 
   const rowModels = table.getRowModel().rows

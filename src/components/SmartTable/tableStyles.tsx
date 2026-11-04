@@ -10,7 +10,13 @@ import { brandColors } from '../../theme/tokens'
 // styles cannot express. Every class is namespaced with `jala-table-` so the
 // sheet cannot collide with consumer styles, and theming happens through CSS
 // variables that flip under a `.dark` ancestor (or `[data-theme='dark']`).
+//
+// Every surface the table draws carries `jala-table-theme`, including the
+// layers it portals into `document.body` (tooltips, menus), so one consumer
+// rule such as `html .jala-table-theme { --jala-table-accent: ... }` themes
+// all of them.
 export const smartTableCss = `
+.jala-table-theme,
 .jala-table-root,
 .jala-table-toolbar {
   --jala-table-text: #3f3f46;
@@ -28,13 +34,16 @@ export const smartTableCss = `
   --jala-table-control-bg: rgb(244, 244, 245);
   --jala-table-control-text: rgb(24, 24, 27);
   --jala-table-accent: ${brandColors.primary};
+  --jala-table-danger: #dc2626;
   --jala-table-shadow:
     0 8px 16px -6px rgba(15, 23, 42, 0.35),
     0 2px 6px -2px rgba(15, 23, 42, 0.2);
 }
 
+.dark .jala-table-theme,
 .dark .jala-table-root,
 .dark .jala-table-toolbar,
+[data-theme='dark'] .jala-table-theme,
 [data-theme='dark'] .jala-table-root,
 [data-theme='dark'] .jala-table-toolbar {
   --jala-table-text: #d4d4d8;
@@ -51,6 +60,7 @@ export const smartTableCss = `
   --jala-table-row-active-bg: rgba(63, 63, 70, 0.6);
   --jala-table-control-bg: rgb(24, 24, 27);
   --jala-table-control-text: rgb(244, 244, 245);
+  --jala-table-danger: #f87171;
 }
 
 /* ------------------------------ Table shell ------------------------------ */
@@ -100,10 +110,16 @@ export const smartTableCss = `
   background-color: var(--jala-table-surface);
 }
 
-.jala-table-header-cell:not(:last-child)::after {
+.jala-table-header-cell--actions {
+  padding: 0;
+}
+
+/* A divider between neighbouring headers, drawn on the left of each one after
+   the first. The hover tray's header takes no room, so it gets none. */
+.jala-table-header-cell + .jala-table-header-cell:not(.jala-table-header-cell--actions)::before {
   content: '';
   position: absolute;
-  right: 0;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
@@ -228,59 +244,221 @@ export const smartTableCss = `
 
 /* ------------------------------ Row actions ------------------------------ */
 
+/* A column pinned to the right edge. On hover screens it is zero wide and its
+   tray floats over the row's right side; on touch screens it is the ellipsis
+   menu's own column. */
 .jala-table-actions-cell {
   position: sticky;
   right: 0;
-  width: 0;
   min-width: 0;
-  max-width: 0;
   padding: 0;
   overflow: visible;
   z-index: 4;
   background: transparent;
+  border-bottom: 1px solid var(--jala-table-border);
 }
 
 .jala-table-actions-tray {
   position: absolute;
-  right: 0;
-  bottom: calc(100% - 4px);
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 2px;
+  padding: 2px;
   opacity: 0;
   pointer-events: none;
   background: var(--jala-table-surface);
   border-radius: 10px;
-  padding: 6px 40px 6px 12px;
-  min-width: 160px;
   z-index: 6;
   color: var(--jala-table-text-muted);
   box-shadow: var(--jala-table-shadow);
-  clip-path: inset(-24px -20px 0 -20px);
+  transition: opacity 150ms ease;
+}
+
+/* Revealed for the hovered row, for keyboard focus inside it, and while its
+   menu is open (the pointer has left for the menu by then). */
+.jala-table-row:hover .jala-table-actions-tray,
+.jala-table-row:focus-within .jala-table-actions-tray,
+.jala-table-actions-tray--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Screens that cannot hover keep the ellipsis menu on every row. Its column
+   is pinned to the right, so it stays opaque over cells scrolling beneath it. */
+.jala-table-actions-tray--pinned {
+  opacity: 1;
+  pointer-events: auto;
+  right: 0.25rem;
+  box-shadow: none;
+}
+
+.jala-table-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--jala-table-text-strong);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.jala-table-icon-button:hover:not(:disabled),
+.jala-table-icon-button[aria-expanded='true'] {
+  background-color: var(--jala-table-row-active-bg);
+}
+
+.jala-table-icon-button:focus-visible,
+.jala-table-action-button:focus-visible,
+.jala-table-menu-item:focus-visible,
+.jala-table-menu-trigger:focus-visible {
+  outline: 2px solid var(--jala-table-accent);
+  outline-offset: -2px;
+}
+
+.jala-table-icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jala-table-icon-button--danger {
+  color: var(--jala-table-danger);
 }
 
 .jala-table-action-button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0;
+  height: 32px;
+  padding: 0 0.625rem;
   border: none;
+  border-radius: 8px;
   background: transparent;
   font: inherit;
   font-size: 0.875rem;
   color: var(--jala-table-text-strong);
+  white-space: nowrap;
   cursor: pointer;
-  transition: opacity 150ms ease;
+  transition: background-color 150ms ease;
 }
 
-.jala-table-action-button:hover {
-  opacity: 0.8;
+.jala-table-action-button:hover:not(:disabled) {
+  background-color: var(--jala-table-row-active-bg);
 }
 
 .jala-table-action-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.jala-table-spin {
+  animation: jala-table-spin 800ms linear infinite;
+}
+
+@keyframes jala-table-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------- Menus --------------------------------- */
+
+.jala-table-menu {
+  z-index: 1000;
+  display: flex;
+  min-width: 11rem;
+  max-height: min(24rem, calc(100vh - 16px));
+  overflow-y: auto;
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 0.75rem;
+  background: var(--jala-table-panel-bg);
+  color: var(--jala-table-text);
+  box-shadow: var(--jala-table-shadow);
+  font-size: 0.875rem;
+}
+
+.jala-table-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.jala-table-menu-item:hover:not(:disabled),
+.jala-table-menu-item:focus-visible {
+  background-color: var(--jala-table-row-active-bg);
+}
+
+.jala-table-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jala-table-menu-item-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--jala-table-text-muted);
+}
+
+.jala-table-menu-item--danger,
+.jala-table-menu-item--danger .jala-table-menu-item-icon {
+  color: var(--jala-table-danger);
+}
+
+/* Dangerous items fill red when hovered, so a destructive press is never a surprise. */
+.jala-table-menu-item--danger:hover:not(:disabled),
+.jala-table-menu-item--danger:focus-visible {
+  background-color: var(--jala-table-danger);
+  color: #ffffff;
+}
+
+.jala-table-menu-item--danger:hover:not(:disabled) .jala-table-menu-item-icon,
+.jala-table-menu-item--danger:focus-visible .jala-table-menu-item-icon {
+  color: #ffffff;
+}
+
+.jala-table-menu-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--jala-table-border);
+}
+
+.jala-table-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 32px;
+  padding: 0 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  color: var(--jala-table-text-strong);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.jala-table-menu-trigger:hover:not(:disabled),
+.jala-table-menu-trigger[aria-expanded='true'] {
+  background-color: var(--jala-table-row-active-bg);
 }
 
 /* ------------------------------- Text cell ------------------------------- */
@@ -604,11 +782,7 @@ export const smartTableCss = `
 }
 
 .jala-table-tooltip-panel {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 40;
+  z-index: 1100;
   width: max-content;
   max-width: 20rem;
   padding: 0.375rem 0.625rem;

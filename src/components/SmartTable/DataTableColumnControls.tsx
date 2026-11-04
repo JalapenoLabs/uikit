@@ -213,7 +213,7 @@ export function DataTableColumnControls(props: Props) {
   const hasColumns = orderedColumnIds.length > 0
 
   return (
-    <div className='jala-table-columns' ref={wrapperRef}>
+    <div className='jala-table-columns jala-table-theme' ref={wrapperRef}>
       <SmartTableStyles />
       <button
         type='button'

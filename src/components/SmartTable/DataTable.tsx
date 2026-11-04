@@ -26,6 +26,7 @@ import {
 } from '@tanstack/react-table'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useDataTableColumns } from './useDataTableColumns'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 // User interface
 import { DataTableBody } from './DataTableBody'
@@ -37,6 +38,10 @@ import { SmartTableStyles } from './tableStyles'
 // Misc
 import { mergeColumnOrder } from './columnOrderUtils'
 import { defaultSmartTableLabels } from './labels'
+
+// Touch screens have no hover, and narrow screens are almost always touch, so
+// both get the ellipsis menu on every row instead of the hover tray.
+const CANNOT_HOVER_MEDIA_QUERY = '(hover: none), (max-width: 640px)'
 
 const EMPTY_SORTING: SortingState = []
 const EMPTY_VISIBILITY: VisibilityState = {}
@@ -117,6 +122,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     pagination,
     renderRowActions,
     rowActions,
+    rowActionsLayout = 'auto',
     getRowClassName,
     onFilteredRowCountChange,
     scrollContainerRef,
@@ -228,6 +234,10 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
   }, [ enableSelection, hasSelectionProps, tableElementId ])
 
   const hasActions = Boolean(renderRowActions || rowActions?.length)
+  const cannotHover = useMediaQuery(CANNOT_HOVER_MEDIA_QUERY)
+  const resolvedRowActionsLayout = rowActionsLayout === 'auto'
+    ? (cannotHover ? 'menu' : 'hover')
+    : rowActionsLayout
 
   const resolveRowId = (row: TData, index: number) => {
     if (getRowId) {
@@ -246,6 +256,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     hasActions,
     renderRowActions,
     rowActions,
+    rowActionsLayout: resolvedRowActionsLayout,
     labels,
   })
 
@@ -540,7 +551,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
   return (
     <section
       id={tableElementId}
-      className={[ 'jala-table-root', className ?? '' ].join(' ').trim()}
+      className={[ 'jala-table-root jala-table-theme', className ?? '' ].join(' ').trim()}
       ref={stickyScrollbar ? scrollContainerRef : undefined}
     >
       <SmartTableStyles />

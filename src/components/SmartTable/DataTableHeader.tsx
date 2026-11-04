@@ -26,6 +26,7 @@ export function DataTableHeader<TData extends RowData>(props: Props<TData>) {
         <tr key={headerGroup.id}>
           {headerGroup.headers.map((header) => {
             const isCompactHeader = header.column.id === 'drag' || header.column.id === 'select'
+            const isActionsHeader = header.column.id === 'actions'
 
             return (
               <th
@@ -34,6 +35,7 @@ export function DataTableHeader<TData extends RowData>(props: Props<TData>) {
                   'jala-table-header-cell',
                   stickyHeader ? 'jala-table-header-cell--sticky' : '',
                   isCompactHeader ? 'jala-table-header-cell--compact' : '',
+                  isActionsHeader ? 'jala-table-header-cell--actions' : '',
                 ].join(' ').trim()}
                 style={{ width: header.getSize() }}
               >

@@ -6,11 +6,15 @@ import type { CellContext, ColumnDef, Row, RowData } from '@tanstack/react-table
 import type { ReactNode } from 'react'
 
 // Core
-import { Children, useMemo } from 'react'
+import { useMemo } from 'react'
+
+// User interface
+import { DataTableRowActions } from './DataTableRowActions'
 
 const DATA_COLUMN_DEFAULT_SIZE = 220
 const DATA_COLUMN_MIN_SIZE = 160
 const DATA_COLUMN_MAX_SIZE = 560
+const ACTIONS_MENU_COLUMN_SIZE = 48
 
 type UseDataTableColumnsOptions<TData extends RowData> = {
   columnDefs: ColumnDef<TData, unknown>[]
@@ -22,17 +26,8 @@ type UseDataTableColumnsOptions<TData extends RowData> = {
   hasActions: boolean
   renderRowActions?: (row: Row<TData>) => ReactNode
   rowActions?: DataTableAction<TData>[]
+  rowActionsLayout: 'hover' | 'menu'
   labels: SmartTableLabels
-}
-
-function resolveActionFlag<TData extends RowData>(
-  value: boolean | ((row: Row<TData>) => boolean) | undefined,
-  row: Row<TData>,
-) {
-  if (typeof value === 'function') {
-    return value(row)
-  }
-  return value
 }
 
 /**
@@ -51,6 +46,7 @@ export function useDataTableColumns<TData extends RowData>(options: UseDataTable
     hasActions,
     renderRowActions,
     rowActions,
+    rowActionsLayout,
     labels,
   } = options
 
@@ -119,53 +115,27 @@ export function useDataTableColumns<TData extends RowData>(options: UseDataTable
     nextColumns.push(...resolvedDataColumnDefs)
 
     if (hasActions) {
+      // The hover tray floats over the row, so its column takes no room; the
+      // ellipsis menu on screens that cannot hover gets a column of its own,
+      // so it never covers the row's last cell.
+      const actionsColumnSize = rowActionsLayout === 'menu'
+        ? ACTIONS_MENU_COLUMN_SIZE
+        : 0
       nextColumns.push({
         id: 'actions',
-        size: 72,
-        minSize: 72,
-        maxSize: 72,
+        size: actionsColumnSize,
+        minSize: actionsColumnSize,
+        maxSize: actionsColumnSize,
         enableResizing: false,
         enableSorting: false,
         header: () => <span className='jala-table-sr-only'>{ labels.actions }</span>,
-        cell: (info: CellContext<TData, unknown>) => {
-          const row = info.row
-          const actionContent = renderRowActions
-            ? renderRowActions(row)
-            : rowActions?.map((action) => {
-              const isVisible = resolveActionFlag(action.isVisible, row)
-              if (isVisible === false) {
-                return null
-              }
-              const isActionDisabled = resolveActionFlag(action.isDisabled, row)
-              return (
-                <button
-                  key={action.id}
-                  type='button'
-                  aria-label={action.ariaLabel ?? action.label}
-                  onClick={() => action.onPress(row)}
-                  className={[ 'jala-table-action-button', action.className ?? '' ].join(' ').trim()}
-                  disabled={isActionDisabled}
-                  data-no-row-highlight='true'
-                >
-                  { action.icon }
-                  <span>{ action.label }</span>
-                </button>
-              )
-            })
-
-          if (Children.toArray(actionContent).length === 0) {
-            return null
-          }
-
-          return (
-            <div
-              className='jala-table-actions-tray'
-              data-no-row-highlight='true'
-            >
-              {actionContent}
-            </div>
-          )
-        },
+        cell: (info: CellContext<TData, unknown>) => <DataTableRowActions
+          row={info.row}
+          rowActions={rowActions}
+          renderRowActions={renderRowActions}
+          layout={rowActionsLayout}
+          labels={labels}
+        />,
       })
     }
 
@@ -179,5 +149,6 @@ export function useDataTableColumns<TData extends RowData>(options: UseDataTable
     hasActions,
     renderRowActions,
     rowActions,
+    rowActionsLayout,
   ])
 }

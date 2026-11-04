@@ -15,18 +15,31 @@ import type {
 } from '@tanstack/react-table'
 import type { ReactNode, RefObject } from 'react'
 import type { SmartTableLabels } from './labels'
+import type { Promisable } from '../../types'
 
 export type DataTableAction<TData extends RowData> = {
   id: string
-  // Display text for the action button. Callers pass already-translated text.
+  // What the action does, already translated. Row actions are icon-only, so
+  // this is the button's tooltip and accessible name, and the item's text in
+  // the ellipsis menu.
   label: string
-  onPress: (row: Row<TData>) => void
+  // Returning a promise shows the button loading until it settles.
+  onPress: (row: Row<TData>) => Promisable<void>
+  // Every action should have one; an action without an icon shows its label.
   icon?: ReactNode
   ariaLabel?: string
   className?: string
+  // Dangerous actions sit last in the ellipsis menu, below a divider, in red.
+  isDanger?: boolean
+  isLoading?: boolean | ((row: Row<TData>) => boolean)
   isDisabled?: boolean | ((row: Row<TData>) => boolean)
   isVisible?: boolean | ((row: Row<TData>) => boolean)
 }
+
+// How row actions show: `hover` reveals icon buttons over the right of the
+// hovered row, `menu` keeps an ellipsis menu on every row, and `auto` picks
+// `menu` on touch and narrow screens, which cannot hover, and `hover` elsewhere.
+export type DataTableRowActionsLayout = 'auto' | 'hover' | 'menu'
 
 export type DataTableRowReorderPayload<TData extends RowData> = {
   previousRows: TData[]
@@ -99,6 +112,7 @@ export type DataTableProps<TData extends RowData> = {
   pagination?: DataTablePaginationConfig
   renderRowActions?: (row: Row<TData>) => ReactNode
   rowActions?: DataTableAction<TData>[]
+  rowActionsLayout?: DataTableRowActionsLayout
   // Optional per-row className resolver. The returned classes are appended to
   // the row's <tr>, letting callers style individual rows by their data (e.g.
   // a danger background for invalid/unmapped rows). Returning a falsy value

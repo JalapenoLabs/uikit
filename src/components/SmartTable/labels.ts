@@ -25,6 +25,7 @@ export type SmartTableLabels = {
   select: string
   selectAll: string
   actions: string
+  moreActions: string
   searchNoResults: string
 
   // Footer
@@ -48,6 +49,7 @@ export const defaultSmartTableLabels: SmartTableLabels = {
   select: 'Select row',
   selectAll: 'Select all rows',
   actions: 'Actions',
+  moreActions: 'More actions',
   searchNoResults: 'No results match your search.',
   rowsPerPage: 'Rows per page',
   pagination: 'Pagination',

@@ -85,6 +85,7 @@ export type {
   DataTableManagedColumn,
   DataTablePaginationConfig,
   DataTableProps,
+  DataTableRowActionsLayout,
   DataTableRowReorderPayload,
 } from './components/SmartTable/DataTable.types'
 export { DataTableToolbar } from './components/SmartTable/DataTableToolbar'
@@ -113,6 +114,7 @@ export { usePagination } from './hooks/usePagination'
 export { useScrollOnMount } from './hooks/useScrollOnMount'
 export { useScrollPositionRestore } from './hooks/useScrollPositionRestore'
 export { useHotkey } from './hooks/useHotkey'
+export { useMediaQuery } from './hooks/useMediaQuery'
 export { useFilterDrawerState } from './hooks/useFilterDrawerState'
 export type { FilterDrawerState } from './hooks/useFilterDrawerState'
 export { useDomTheme } from './hooks/useDomTheme'

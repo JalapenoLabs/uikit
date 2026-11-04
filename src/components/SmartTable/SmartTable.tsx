@@ -3,6 +3,7 @@
 import type {
   DataTableAction,
   DataTableManagedColumn,
+  DataTableRowActionsLayout,
   DataTableRowReorderPayload,
 } from './DataTable.types'
 import type { SmartTableLabels } from './labels'
@@ -101,6 +102,7 @@ export type SmartTableProps<TData extends RowData> = {
   onHighlightedRowChange?: (rowId: string | null) => void
   renderRowActions?: (row: Row<TData>) => ReactNode
   rowActions?: DataTableAction<TData>[]
+  rowActionsLayout?: DataTableRowActionsLayout
   search?: SmartTableSearch
   toolbar?: SmartTableToolbar
   columnControls?: SmartTableColumnControls
@@ -219,6 +221,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     onHighlightedRowChange,
     renderRowActions,
     rowActions,
+    rowActionsLayout,
   } = props
 
   const [ internalSorting, setInternalSorting ] = useState<SortingState>([])
@@ -435,6 +438,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
           : undefined}
         renderRowActions={renderRowActions}
         rowActions={rowActions}
+        rowActionsLayout={rowActionsLayout}
         onFilteredRowCountChange={setFilteredRowCount}
         scrollContainerRef={persistentPosition ? scrollContainerRef : undefined}
         stickyScrollbar={stickyScrollbar}

@@ -81,8 +81,18 @@ export { SmartTable } from './components/SmartTable/SmartTable'
 export type {
   SmartTableCsvExport,
   SmartTableControlsTarget,
+  SmartTableFilters,
   SmartTableProps,
 } from './components/SmartTable/SmartTable'
+export { applyFilters, isFilterValueActive } from './components/SmartTable/filters'
+export type {
+  SmartTableColumnFilter,
+  SmartTableFilter,
+  SmartTableFilterOption,
+  SmartTableFilterRowValue,
+  SmartTableFilterValue,
+  SmartTableFilterValues,
+} from './components/SmartTable/filters'
 export { DataTable } from './components/SmartTable/DataTable'
 export type {
   DataTableAction,

@@ -3,6 +3,7 @@
 import type { DataTableManagedColumn } from './DataTable.types'
 import type { ColumnDef, RowData } from '@tanstack/react-table'
 import type { CsvValue } from '../../utils/csv'
+import type { SmartTableColumnFilter } from './filters'
 
 type CreateManagedColumnParams<TData extends RowData, TColumnKey extends string> = {
   columnKey: TColumnKey
@@ -32,6 +33,8 @@ type CreateManagedColumnsOptions<TData extends RowData, TColumnKey extends strin
   getLineClamp?: (columnKey: TColumnKey, columnIndex: number) => number | false | undefined
   // Optional: a column's CSV export value. See `DataTableManagedColumn.exportValue`.
   getExportValue?: (columnKey: TColumnKey, columnIndex: number) => ((row: TData) => CsvValue) | null | undefined
+  // Optional: a column's filter. See `DataTableManagedColumn.filter`.
+  getFilter?: (columnKey: TColumnKey, columnIndex: number) => SmartTableColumnFilter<TData> | undefined
   createColumnDef: (params: CreateManagedColumnParams<TData, TColumnKey>) => ColumnDef<TData, unknown>
   columnDefOverrides?: Partial<Record<TColumnKey, ColumnDefOverride<TData, TColumnKey>>>
 }
@@ -53,6 +56,7 @@ export function createManagedColumns<TData extends RowData, TColumnKey extends s
     getSearchValue,
     getLineClamp,
     getExportValue,
+    getFilter,
     createColumnDef,
     columnDefOverrides,
   } = options
@@ -83,6 +87,7 @@ export function createManagedColumns<TData extends RowData, TColumnKey extends s
       getSearchValue: searchValueResolver,
       lineClamp: getLineClamp?.(columnKey, columnIndex),
       exportValue: getExportValue?.(columnKey, columnIndex),
+      filter: getFilter?.(columnKey, columnIndex),
       columnDef: {
         ...resolvedColumnDef,
         id: columnId,

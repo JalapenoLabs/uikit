@@ -325,6 +325,63 @@ export const WithoutToolbar: Story = {
   render: () => <SmartTableStory toolbar={{ show: false }} csvExport={{ fileName: 'people' }} />,
 }
 
+const filterColumns = createManagedColumns<Person, 'name' | 'role' | 'team' | 'joined'>({
+  columnKeys: [ 'name', 'role', 'team', 'joined' ],
+  getColumnLabel: (columnKey) => ({ name: 'Name', role: 'Role', team: 'Team', joined: 'Date joined' })[columnKey],
+  getFilter: (columnKey) => {
+    const filterByKey = {
+      name: { kind: 'text' },
+      role: {
+        kind: 'multiSelect',
+        options: [ 'Engineer', 'Admiral', 'Mathematician', 'Rocket Scientist' ]
+          .map((role) => ({ value: role, label: role })),
+      },
+      team: undefined,
+      joined: undefined,
+    } as const
+    return filterByKey[columnKey]
+  },
+  createColumnDef: ({ columnKey, columnLabel }) => ({
+    accessorKey: columnKey,
+    header: columnLabel,
+  }),
+})
+
+// The filters button opens a full-height drawer; active filters show as tags
+// above the table, and one press on a tag removes it. "Joined this year" is a
+// table filter, for what is not a column.
+export const WithFilters: Story = {
+  render: function WithFiltersStory() {
+    const [ container, setContainer ] = useState<HTMLDivElement | null>(null)
+
+    return <div>
+      <header style={titlebarStyle}>
+        <h1 style={{ margin: 0, fontSize: 28 }}>People</h1>
+        <div ref={setContainer} style={{ display: 'contents' }} />
+      </header>
+      <SmartTable
+        ids={{
+          tableElementId: 'story-filter-table',
+          tableLocalStorageId: 'story-filter-table',
+        }}
+        tableAriaLabel='People'
+        data={people}
+        managedColumns={filterColumns}
+        getRowId={(row) => row.id}
+        controls={{ container }}
+        filters={{
+          definitions: [{
+            id: 'recent',
+            label: 'Joined in 2024',
+            kind: 'boolean',
+            matches: (person, value) => person.joined.startsWith('2024') === value,
+          }],
+        }}
+      />
+    </div>
+  },
+}
+
 export const Localized: Story = {
   render: () => <SmartTableStory
     labels={{

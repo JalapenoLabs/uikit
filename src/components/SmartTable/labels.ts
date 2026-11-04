@@ -16,6 +16,19 @@ export type SmartTableLabels = {
   columns: string
   exportCsv: string
 
+  // Filters
+  filters: string
+  applyFilters: string
+  cancel: string
+  filterAny: string
+  filterYes: string
+  filterNo: string
+  activeFilters: string
+  // A tag's text, such as "Status: Open, Blocked".
+  filterTag: (filterLabel: string, valueText: string) => string
+  removeFilter: (tagText: string) => string
+  activeFilterCount: (count: number) => string
+
   // Header
   sort: string
   sortAscending: string
@@ -46,6 +59,18 @@ export const defaultSmartTableLabels: SmartTableLabels = {
     : `${count} results`,
   columns: 'Columns',
   exportCsv: 'Export CSV',
+  filters: 'Filters',
+  applyFilters: 'Apply filters',
+  cancel: 'Cancel',
+  filterAny: 'Any',
+  filterYes: 'Yes',
+  filterNo: 'No',
+  activeFilters: 'Active filters',
+  filterTag: (filterLabel, valueText) => `${filterLabel}: ${valueText}`,
+  removeFilter: (tagText) => `Remove filter ${tagText}`,
+  activeFilterCount: (count) => count === 1
+    ? '1 filter on'
+    : `${count} filters on`,
   sort: 'Sort',
   sortAscending: 'Sorted ascending',
   sortDescending: 'Sorted descending',

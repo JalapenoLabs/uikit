@@ -15,6 +15,9 @@ type Props = {
   // What Enter does, such as saving. A textarea takes Ctrl+Enter instead, so
   // Enter can still start a new line; a focused button presses itself.
   onEnter?: () => void
+  // `dialog` is centered; `drawer` fills the height of the screen's right
+  // side, its buttons full width along the bottom (ux.md, Drawers).
+  variant?: 'dialog' | 'drawer'
   className?: string
 }
 
@@ -32,13 +35,13 @@ function isTextArea(target: EventTarget) {
 }
 
 /**
- * A modal dialog for the table's own flows, such as a cell's full content or
- * a bulk edit. It renders in a portal over a backdrop, keeps keyboard focus
+ * A modal dialog or side drawer for the table's own flows, such as a cell's
+ * full content, the filters, or a bulk edit. It renders in a portal over a backdrop, keeps keyboard focus
  * inside itself while open, closes on Escape or a backdrop press, and gives
  * focus back to where it was when it closes. Render it only while open.
  */
 export function TableDialog(props: Props) {
-  const { onClose, onEnter } = props
+  const { onClose, onEnter, variant = 'dialog' } = props
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
 
@@ -111,7 +114,7 @@ export function TableDialog(props: Props) {
 
   return createPortal(
     <div
-      className='jala-table-theme jala-table-dialog-backdrop'
+      className={`jala-table-theme jala-table-dialog-backdrop jala-table-dialog-backdrop--${variant}`}
       data-no-row-highlight='true'
       onMouseDown={(event) => {
         // Only a press on the backdrop itself, not one that started inside.
@@ -126,7 +129,7 @@ export function TableDialog(props: Props) {
         aria-modal='true'
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={[ 'jala-table-dialog', props.className ?? '' ].join(' ').trim()}
+        className={[ 'jala-table-dialog', `jala-table-dialog--${variant}`, props.className ?? '' ].join(' ').trim()}
         onKeyDown={handleKeyDown}
       >
         <h2 id={titleId} className='jala-table-dialog-title'>{ props.title }</h2>

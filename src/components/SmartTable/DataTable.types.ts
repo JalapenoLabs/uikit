@@ -18,6 +18,7 @@ import type { MutableRefObject, ReactNode, RefObject } from 'react'
 import type { SmartTableLabels } from './labels'
 import type { Promisable } from '../../types'
 import type { CsvValue } from '../../utils/csv'
+import type { SmartTableColumnFilter } from './filters'
 
 export type DataTableAction<TData extends RowData> = {
   id: string
@@ -75,6 +76,9 @@ export type DataTableManagedColumn<TData extends RowData> = {
   // column's raw accessor value; give one for display-only cells or cells
   // whose accessor is a sort key, and `null` to leave the column out.
   exportValue?: ((row: TData) => CsvValue) | null
+  // Offers this column in the filters drawer, as a select, multi-select,
+  // yes-or-no, or text filter. See `SmartTableColumnFilter`.
+  filter?: SmartTableColumnFilter<TData>
   columnDef: ColumnDef<TData, unknown>
 }
 

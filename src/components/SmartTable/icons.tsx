@@ -13,6 +13,7 @@ export type TableIconName =
   | 'chevronRight'
   | 'more'
   | 'download'
+  | 'filter'
   | 'spinner'
 
 // Every icon is drawn on a 24x24 grid with `currentColor` strokes so it
@@ -55,6 +56,7 @@ const pathsByIconName = {
     <circle cx='12' cy='12' r='1.5' fill='currentColor' stroke='none' />
     <circle cx='19' cy='12' r='1.5' fill='currentColor' stroke='none' />
   </>,
+  filter: <polygon points='4 5 20 5 14 12.5 14 19 10 17 10 12.5 4 5' />,
   download: <>
     <path d='M12 4v11' />
     <polyline points='7 10 12 15 17 10' />

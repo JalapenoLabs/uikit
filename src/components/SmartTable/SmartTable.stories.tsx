@@ -157,21 +157,55 @@ export const WithPagination: Story = {
   },
 }
 
+// Small inline icons for the stories; consumers pass their own icon set.
+type StoryIconProps = {
+  path: string
+}
+
+function StoryIcon(props: StoryIconProps) {
+  return <svg width={16} height={16} viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth={2}>
+    <path d={props.path} />
+  </svg>
+}
+
+const storyRowActions = [
+  {
+    id: 'edit',
+    label: 'Edit',
+    icon: <StoryIcon path='M4 20h4L19 9l-4-4L4 16v4z' />,
+    onPress: (row: { original: Person }) => console.log('Edit', row.original),
+  },
+  {
+    id: 'archive',
+    label: 'Archive',
+    icon: <StoryIcon path='M3 7h18M5 7v13h14V7M9 11h6' />,
+    // A promise shows the button loading until it settles.
+    onPress: () => new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+  },
+  {
+    id: 'share',
+    label: 'Share',
+    icon: <StoryIcon path='M4 12v8h16v-8M12 3v13M7 8l5-5 5 5' />,
+    onPress: (row: { original: Person }) => console.log('Share', row.original),
+  },
+  {
+    id: 'delete',
+    label: 'Delete',
+    icon: <StoryIcon path='M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13' />,
+    isDanger: true,
+    onPress: (row: { original: Person }) => console.log('Delete', row.original),
+  },
+]
+
+// Hover a row: icon-only buttons with tooltips float over its right side.
+// Past three actions, the first two stay and the rest go into the ellipsis menu.
 export const WithRowActions: Story = {
-  render: () => <SmartTableStory
-    rowActions={[
-      {
-        id: 'edit',
-        label: 'Edit',
-        onPress: (row) => console.log('Edit', row.original),
-      },
-      {
-        id: 'delete',
-        label: 'Delete',
-        onPress: (row) => console.log('Delete', row.original),
-      },
-    ]}
-  />,
+  render: () => <SmartTableStory rowActions={storyRowActions} />,
+}
+
+// What touch and narrow screens get on their own: the ellipsis menu on every row.
+export const WithRowActionsMenu: Story = {
+  render: () => <SmartTableStory rowActions={storyRowActions} rowActionsLayout='menu' />,
 }
 
 export const WithRowReorder: Story = {

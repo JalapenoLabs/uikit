@@ -130,7 +130,7 @@ function DataTableRowBase<TData extends RowData>(props: DataTableRowBaseProps<TD
             <td
               key={cell.id}
               className='jala-table-actions-cell'
-              style={{ width: 0 }}
+              style={{ width: cell.column.getSize() }}
               data-no-row-highlight='true'
             >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}

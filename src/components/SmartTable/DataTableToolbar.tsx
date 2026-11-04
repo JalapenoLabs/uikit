@@ -44,7 +44,7 @@ export function DataTableToolbar(props: Props) {
   const resolvedPlaceholder = searchPlaceholder ?? labels.searchPlaceholder
 
   return (
-    <section className={[ 'jala-table-toolbar', className ?? '' ].join(' ').trim()}>
+    <section className={[ 'jala-table-toolbar jala-table-theme', className ?? '' ].join(' ').trim()}>
       <SmartTableStyles />
       <div className='jala-table-toolbar-group'>
         { showSearch

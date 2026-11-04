@@ -11,6 +11,8 @@ export type TableIconName =
   | 'sortDown'
   | 'chevronLeft'
   | 'chevronRight'
+  | 'more'
+  | 'spinner'
 
 // Every icon is drawn on a 24x24 grid with `currentColor` strokes so it
 // inherits size and color from its surroundings. Inlining the paths keeps the
@@ -47,6 +49,13 @@ const pathsByIconName = {
   </>,
   chevronLeft: <polyline points='15 18 9 12 15 6' />,
   chevronRight: <polyline points='9 18 15 12 9 6' />,
+  more: <>
+    <circle cx='5' cy='12' r='1.5' fill='currentColor' stroke='none' />
+    <circle cx='12' cy='12' r='1.5' fill='currentColor' stroke='none' />
+    <circle cx='19' cy='12' r='1.5' fill='currentColor' stroke='none' />
+  </>,
+  // A three-quarter ring; the `jala-table-spin` class turns it.
+  spinner: <path d='M21 12a9 9 0 1 1-6.22-8.56' />,
 } as const satisfies Record<TableIconName, ReactNode>
 
 type Props = {

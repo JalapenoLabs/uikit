@@ -124,7 +124,8 @@ Jalapeno Labs and rewritten to the conventions above.
 **Wave 1 (done):**
 - Components: Button, FlattenErrors, HighlightFuzzy, AnimatedPercent, CoverageRing
 - Hooks: useRepeater, useTimer, useRerender, useSelection, useSubstringSearch,
-  usePagination, useScrollOnMount, useScrollPositionRestore, useHotkey
+  usePagination, useScrollOnMount, useScrollPositionRestore, useHotkey,
+  useMediaQuery
 - Utils: clipText, getErrorMessage, getLast, percent, reorderArray, stringify,
   formatBytes, singleThreadedInterval, setTimeoutToNextSecond, fuzzyMatch, hotkeys
 
@@ -145,6 +146,22 @@ made during the port:
   `[data-theme='dark']`.
 - It reuses the Wave 1 `HighlightFuzzy` component and
   `useScrollPositionRestore` hook rather than shipping private copies.
+
+**SmartTable behavior (follows `~/.claude/docs/ux.md`, Table layout):**
+- Theming: every surface carries `jala-table-theme`, including layers portaled
+  into `document.body`, so `html .jala-table-theme { --jala-table-*: ... }`
+  themes all of them.
+- Floating layers (tooltips, menus) render through `FloatingLayer`: a portal
+  into `document.body` with fixed positioning from `computeFloatingPosition`,
+  because the table's horizontal scroll container clips anything absolutely
+  positioned inside it. Layers carry `data-no-row-highlight`, since React
+  bubbles portal events to the row.
+- Row actions float over the right of the hovered row as icon-only buttons
+  with tooltips, at most three; past three, two stay and the ellipsis menu
+  (`TableMenu`) holds the rest. On screens that cannot hover (`(hover: none),
+  (max-width: 640px)`) every row shows the ellipsis menu in a pinned column
+  instead. `rowActionsLayout` (`auto`, `hover`, `menu`) overrides the choice.
+  An action whose `onPress` returns a promise shows loading until it settles.
 
 **Backlog (good next candidates, each adds a dependency or needs decoupling):**
 - `MarkdownContent` (react-markdown + remark-gfm + rehype-raw)

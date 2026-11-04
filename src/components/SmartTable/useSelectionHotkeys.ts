@@ -3,6 +3,9 @@
 // Core
 import { useEffect, useLayoutEffect, useRef } from 'react'
 
+// Utility
+import { isTextEntry } from '../../utils/isTextEntry'
+
 type Handlers = {
   hasSelection: boolean
   canUndo: boolean
@@ -16,13 +19,11 @@ type Handlers = {
 // Where the keys keep their usual meaning: typing, and the table's own (or
 // anyone's) dialogs and menus.
 function isOwnedElsewhere(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) {
-    return false
-  }
-  if (target.isContentEditable || [ 'INPUT', 'TEXTAREA', 'SELECT' ].includes(target.tagName)) {
+  if (isTextEntry(target)) {
     return true
   }
-  return Boolean(target.closest('[role="dialog"], [role="menu"], [aria-modal="true"]'))
+  return target instanceof HTMLElement
+    && Boolean(target.closest('[role="dialog"], [role="menu"], [aria-modal="true"]'))
 }
 
 /**

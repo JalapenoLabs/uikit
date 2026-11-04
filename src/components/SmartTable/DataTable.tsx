@@ -588,16 +588,20 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     onSelectAll: selectPage,
   })
 
-  const barActions: DataTableSelectionAction<TData>[] = []
-  if (bulkEdit) {
-    barActions.push({
-      id: BULK_EDIT_ACTION_ID,
-      label: labels.bulkEdit,
-      icon: <TableIcon name='edit' size={16} />,
-      onPress: () => setIsBulkEditOpen(true),
-    })
-  }
-  barActions.push(...(selectionActions ?? []))
+  // Stable between renders, so the bar measures its actions only when they change.
+  const barActions = useMemo(() => {
+    const actions: DataTableSelectionAction<TData>[] = []
+    if (bulkEdit) {
+      actions.push({
+        id: BULK_EDIT_ACTION_ID,
+        label: labels.bulkEdit,
+        icon: <TableIcon name='edit' size={16} />,
+        onPress: () => setIsBulkEditOpen(true),
+      })
+    }
+    actions.push(...(selectionActions ?? []))
+    return actions
+  }, [ bulkEdit, selectionActions, labels.bulkEdit ])
 
   const showSelectAllBanner = Boolean(
     isSelectionActive

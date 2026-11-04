@@ -8,6 +8,9 @@ import { useEffect, useRef } from 'react'
 // User interface
 import { TableIcon } from './icons'
 
+// Utility
+import { isTextEntry } from '../../utils/isTextEntry'
+
 type Props = {
   value: string
   onChange: (value: string) => void
@@ -20,13 +23,6 @@ type Props = {
   // Ctrl+F (Cmd+F) focuses this field instead of opening the browser's find,
   // unless focus is already in a text field.
   focusHotkey?: boolean
-}
-
-function isTextEntry(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) {
-    return false
-  }
-  return target.isContentEditable || [ 'INPUT', 'TEXTAREA', 'SELECT' ].includes(target.tagName)
 }
 
 /**

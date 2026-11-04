@@ -245,6 +245,23 @@ describe('selection hotkeys', () => {
     expect(checkedTitles()).toEqual([])
   })
 
+  it('works right after a checkbox click, with focus still on the checkbox', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+    await user.click(checkboxOf('Task 01'))
+    await user.click(checkboxOf('Task 02'))
+    expect(checkboxOf('Task 02')).toHaveFocus()
+
+    await user.keyboard('{Control>}z{/Control}')
+    expect(checkedTitles()).toEqual([ 'Task 01' ])
+
+    await user.keyboard('{Control>}a{/Control}')
+    expect(checkedTitles()).toHaveLength(5)
+
+    await user.keyboard('{Escape}')
+    expect(checkedTitles()).toEqual([])
+  })
+
   it('selects all with Ctrl+A and deselects all with Ctrl+Shift+A', () => {
     render(<Harness />)
 

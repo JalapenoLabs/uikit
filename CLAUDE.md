@@ -162,6 +162,14 @@ made during the port:
   (max-width: 640px)`) every row shows the ellipsis menu in a pinned column
   instead. `rowActionsLayout` (`auto`, `hover`, `menu`) overrides the choice.
   An action whose `onPress` returns a promise shows loading until it settles.
+- Every data cell clamps to `cellLineClamp` lines (3 by default; a column's
+  `lineClamp` wins, `false` opts out). `cellOverflow: 'expandRow'` (default)
+  expands one row at a time on click, the highlighted row where row highlight
+  is on. `cellOverflow: 'modal'` is for rows whose click navigates: a
+  double-click on a clamped cell opens it in `TableCellDialog`, and a single
+  click on one waits `DOUBLE_CLICK_WINDOW_MS` so the double-click can win.
+- Clicks on links, buttons, and form fields inside a row are their own, never
+  the row's.
 
 **Backlog (good next candidates, each adds a dependency or needs decoupling):**
 - `MarkdownContent` (react-markdown + remark-gfm + rehype-raw)

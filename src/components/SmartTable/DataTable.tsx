@@ -1,6 +1,7 @@
 // Copyright © 2026 Jalapeno Labs
 
-import type { DataTableProps } from './DataTable.types'
+import type { DataTableProps, ManagedColumnMeta } from './DataTable.types'
+import type { OpenTableCell } from './TableCellDialog'
 import type {
   ColumnFiltersState,
   ColumnOrderState,
@@ -16,7 +17,7 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import type { RefObject } from 'react'
 
 // Core
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -33,6 +34,7 @@ import { DataTableBody } from './DataTableBody'
 import { DataTableDndWrapper } from './DataTableDndWrapper'
 import { DataTableFooter } from './DataTableFooter'
 import { DataTableHeader } from './DataTableHeader'
+import { TableCellDialog } from './TableCellDialog'
 import { SmartTableStyles } from './tableStyles'
 
 // Misc
@@ -42,6 +44,9 @@ import { defaultSmartTableLabels } from './labels'
 // Touch screens have no hover, and narrow screens are almost always touch, so
 // both get the ellipsis menu on every row instead of the hover tray.
 const CANNOT_HOVER_MEDIA_QUERY = '(hover: none), (max-width: 640px)'
+
+// ux.md: a table row is never more than three lines tall until expanded.
+const DEFAULT_CELL_LINE_CLAMP = 3
 
 const EMPTY_SORTING: SortingState = []
 const EMPTY_VISIBILITY: VisibilityState = {}
@@ -123,6 +128,8 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     renderRowActions,
     rowActions,
     rowActionsLayout = 'auto',
+    cellLineClamp = DEFAULT_CELL_LINE_CLAMP,
+    cellOverflow = 'expandRow',
     getRowClassName,
     onFilteredRowCountChange,
     scrollContainerRef,
@@ -169,23 +176,21 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
 
   const managedColumnDefs = useMemo(() => {
     return managedColumns.map((managedColumn) => {
-      // Fold the tooltip resolvers into tanstack `meta` (merging any meta the
-      // caller already set) so DataTableRow / DataTableHeader can read them at
-      // their flexRender points. Columns without tooltips keep their original
-      // meta untouched.
-      const hasTooltip = managedColumn.cellTooltip || managedColumn.headerTooltip !== undefined
-      const meta = hasTooltip
-        ? {
-          ...managedColumn.columnDef.meta,
-          cellTooltip: managedColumn.cellTooltip,
-          headerTooltip: managedColumn.headerTooltip,
-        }
-        : managedColumn.columnDef.meta
+      // Fold the managed-column settings into tanstack `meta` (merging any
+      // meta the caller already set) so DataTableRow / DataTableHeader can
+      // read them at their flexRender points.
+      const meta: ManagedColumnMeta<TData> = {
+        ...managedColumn.columnDef.meta,
+        cellTooltip: managedColumn.cellTooltip,
+        headerTooltip: managedColumn.headerTooltip,
+        lineClamp: managedColumn.lineClamp,
+        columnLabel: managedColumn.columnLabel,
+      }
 
       return {
         ...managedColumn.columnDef,
         id: managedColumn.columnId,
-        ...(meta ? { meta } : {}),
+        meta,
       }
     })
   }, [ managedColumns ])
@@ -207,6 +212,19 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
 
   const highlightedRowId = highlightedRowIdProp ?? null
   const handleHighlightedRowChange = onHighlightedRowChange ?? NOOP_HIGHLIGHT_CHANGE
+
+  // One expanded row at a time. Where row highlight is on, the highlighted row
+  // is the expanded one, so one click does both; in modal mode no row expands.
+  const [ ownExpandedRowId, setOwnExpandedRowId ] = useState<string | null>(null)
+  const [ openCell, setOpenCell ] = useState<OpenTableCell | null>(null)
+  const closeOpenCell = useCallback(() => setOpenCell(null), [])
+  const openCellById = useCallback((rowId: string, columnId: string) => setOpenCell({ rowId, columnId }), [])
+  let expandedRowId: string | null = null
+  if (cellOverflow === 'expandRow') {
+    expandedRowId = enableRowHighlight
+      ? highlightedRowId
+      : ownExpandedRowId
+  }
 
   const rowSelection = rowSelectionProp ?? EMPTY_ROW_SELECTION
   const handleRowSelectionChange = onRowSelectionChange ?? NOOP_ROW_SELECTION_CHANGE
@@ -541,6 +559,11 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
         onHighlightedRowChange={handleHighlightedRowChange}
         selectionDisabled={selectionDisabled}
         enableRowHighlight={enableRowHighlight}
+        expandedRowId={expandedRowId}
+        onExpandedRowChange={setOwnExpandedRowId}
+        cellLineClamp={cellLineClamp}
+        cellOverflow={cellOverflow}
+        onOpenCell={openCellById}
         getRowClassName={getRowClassName}
         searchTerm={searchTerm}
         labels={labels}
@@ -572,6 +595,10 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
           : tableElement
         }
       </div>
+      { openCell
+        ? <TableCellDialog table={table} cell={openCell} labels={labels} onClose={closeOpenCell} />
+        : null
+      }
       { pagination
         ? (
           <DataTableFooter

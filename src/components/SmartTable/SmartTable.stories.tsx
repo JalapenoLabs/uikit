@@ -256,6 +256,34 @@ export const WithTooltips: Story = {
   },
 }
 
+const longBio = ' Their work changed how every team after them builds, tests, and ships software, '
+  + 'and is still taught today as the foundation of the field.'
+
+const bioColumns = createManagedColumns<Person, 'name' | 'role' | 'bio'>({
+  columnKeys: [ 'name', 'role', 'bio' ],
+  getColumnLabel: (columnKey) => ({ name: 'Name', role: 'Role', bio: 'Biography' })[columnKey],
+  createColumnDef: ({ columnKey, columnLabel }) => ({
+    accessorFn: (row) => columnKey === 'bio'
+      ? row.bio + longBio
+      : row[columnKey],
+    header: columnLabel,
+    size: columnKey === 'bio'
+      ? 300
+      : 180,
+  }),
+})
+
+// Every cell clamps to three lines. Click a row to read it in full; clicking
+// another row closes the first.
+export const WithLongCells: Story = {
+  render: () => <SmartTableStory managedColumns={bioColumns} />,
+}
+
+// For rows whose click navigates: double-click a clamped cell to read it.
+export const WithLongCellsInModal: Story = {
+  render: () => <SmartTableStory managedColumns={bioColumns} cellOverflow='modal' />,
+}
+
 export const Localized: Story = {
   render: () => <SmartTableStory
     labels={{

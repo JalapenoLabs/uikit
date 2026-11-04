@@ -65,8 +65,18 @@ export type DataTableManagedColumn<TData extends RowData> = {
   cellTooltip?: (row: TData) => ReactNode
   // Optional static tooltip shown when hovering the column header.
   headerTooltip?: ReactNode
+  // How many lines this column's cells show before clamping, overriding the
+  // table's `cellLineClamp`; `false` never clamps (for cells that are always
+  // short, or that manage their own height).
+  lineClamp?: number | false
   columnDef: ColumnDef<TData, unknown>
 }
+
+// What a clamped cell offers to show the rest of its content. `expandRow`:
+// clicking a row expands it to its full height, one row at a time (the
+// highlighted row, where row highlight is on). `modal`: for rows whose click
+// navigates, double-clicking a clamped cell opens its full content in a modal.
+export type DataTableCellOverflow = 'expandRow' | 'modal'
 
 export type DataTablePaginationConfig = {
   pageIndex: number
@@ -113,6 +123,10 @@ export type DataTableProps<TData extends RowData> = {
   renderRowActions?: (row: Row<TData>) => ReactNode
   rowActions?: DataTableAction<TData>[]
   rowActionsLayout?: DataTableRowActionsLayout
+  // Lines a cell shows before clamping (ux: never more than three). `false`
+  // turns clamping off; a column's own `lineClamp` wins over this.
+  cellLineClamp?: number | false
+  cellOverflow?: DataTableCellOverflow
   // Optional per-row className resolver. The returned classes are appended to
   // the row's <tr>, letting callers style individual rows by their data (e.g.
   // a danger background for invalid/unmapped rows). Returning a falsy value
@@ -124,13 +138,15 @@ export type DataTableProps<TData extends RowData> = {
   stickyHeader?: boolean
 }
 
-// The managed-column tooltip resolvers ride on tanstack's per-column `meta` so
-// the row/header renderers can read them at the single flexRender points
-// without threading extra props. We deliberately avoid a
+// The managed-column settings (tooltips, line clamp) ride on tanstack's
+// per-column `meta` so the row/header renderers can read them at the single
+// flexRender points without threading extra props. We deliberately avoid a
 // `declare module '@tanstack/react-table'` augmentation here: bundled .d.ts
 // rollups drop module augmentations, so instead the read sites narrow `meta`
 // through this type at the third-party boundary.
-export type ManagedColumnTooltipMeta<TData extends RowData> = {
+export type ManagedColumnMeta<TData extends RowData> = {
   cellTooltip?: (row: TData) => ReactNode
   headerTooltip?: ReactNode
+  lineClamp?: number | false
+  columnLabel?: string
 }

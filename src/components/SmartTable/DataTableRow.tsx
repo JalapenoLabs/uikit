@@ -1,12 +1,12 @@
 // Copyright © 2026 Jalapeno Labs
 
-import type { ManagedColumnTooltipMeta } from './DataTable.types'
+import type { DataTableCellOverflow, ManagedColumnMeta } from './DataTable.types'
 import type { SmartTableLabels } from './labels'
 import type { Row, RowData } from '@tanstack/react-table'
 import type { CSSProperties, MouseEvent } from 'react'
 
 // Core
-import { useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { flexRender } from '@tanstack/react-table'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -22,8 +22,25 @@ type DataTableRowProps<TData extends RowData> = {
   isHighlighted: boolean
   enableRowHighlight: boolean
   onHighlightedRowChange: (rowId: string | null) => void
+  // Whether this row shows its cells' full content instead of clamping them.
+  isExpanded: boolean
+  onExpandedRowChange: (rowId: string | null) => void
+  cellLineClamp: number | false
+  cellOverflow: DataTableCellOverflow
+  onOpenCell: (rowId: string, columnId: string) => void
   getRowClassName?: (row: Row<TData>) => string | undefined
   labels: SmartTableLabels
+}
+
+// A press on one of these is the element's own, never the row's.
+const INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, label, [data-no-row-highlight="true"]'
+const CLAMP_SELECTOR = '.jala-table-cell-clamp'
+// How long a row waits, after a click on a clamped cell, for the second click
+// of a double-click before treating it as a single click.
+export const DOUBLE_CLICK_WINDOW_MS = 250
+
+function isClampOverflowing(element: Element) {
+  return element.scrollHeight > element.clientHeight + 1
 }
 
 type SortableBindings = {
@@ -47,25 +64,91 @@ function DataTableRowBase<TData extends RowData>(props: DataTableRowBaseProps<TD
     isHighlighted,
     enableRowHighlight,
     onHighlightedRowChange,
+    isExpanded,
+    onExpandedRowChange,
+    cellLineClamp,
+    cellOverflow,
+    onOpenCell,
     getRowClassName,
     labels,
     sortable,
   } = props
 
-  const handleRowClick = useCallback((event: MouseEvent<HTMLTableRowElement>) => {
-    if (!enableRowHighlight) {
+  const pendingClickRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function cancelPendingClick() {
+    if (pendingClickRef.current !== null) {
+      clearTimeout(pendingClickRef.current)
+      pendingClickRef.current = null
+    }
+  }
+
+  useEffect(() => cancelPendingClick, [])
+
+  function pressRow() {
+    if (cellOverflow === 'expandRow' && !enableRowHighlight) {
+      onExpandedRowChange(isExpanded
+        ? null
+        : row.id)
       return
     }
-    // Interactive elements (checkboxes, action buttons, drag handles) opt out
-    // of row highlighting so clicking them never toggles the row.
-    const target = event.target as HTMLElement | null
-    if (target?.closest('[data-no-row-highlight="true"]')) {
+    if (enableRowHighlight) {
+      onHighlightedRowChange(isHighlighted
+        ? null
+        : row.id)
+    }
+  }
+
+  function handleRowClick(event: MouseEvent<HTMLTableRowElement>) {
+    // Checkboxes, links, action buttons, and drag handles are their own
+    // presses, so pressing one never toggles or opens the row.
+    const target = event.target
+    if (!(target instanceof Element) || target.closest(INTERACTIVE_SELECTOR)) {
       return
     }
-    onHighlightedRowChange(isHighlighted
-      ? null
-      : row.id)
-  }, [ enableRowHighlight, isHighlighted, onHighlightedRowChange, row.id ])
+
+    if (cellOverflow === 'expandRow') {
+      pressRow()
+      return
+    }
+
+    // In modal mode a row's click is the consumer's, such as navigating. On a
+    // clamped cell it waits briefly, so the second click of a double-click can
+    // open the cell instead of leaving the page under it.
+    cancelPendingClick()
+    if (event.detail > 1) {
+      return
+    }
+    const clamp = target.closest(CLAMP_SELECTOR)
+    if (clamp && isClampOverflowing(clamp)) {
+      pendingClickRef.current = setTimeout(() => {
+        pendingClickRef.current = null
+        pressRow()
+      }, DOUBLE_CLICK_WINDOW_MS)
+      return
+    }
+    pressRow()
+  }
+
+  function handleRowDoubleClick(event: MouseEvent<HTMLTableRowElement>) {
+    if (cellOverflow !== 'modal') {
+      return
+    }
+    const target = event.target
+    if (!(target instanceof Element) || target.closest(INTERACTIVE_SELECTOR)) {
+      return
+    }
+    const clamp = target.closest<HTMLElement>(CLAMP_SELECTOR)
+    const columnId = clamp?.dataset.columnId
+    if (!clamp || !columnId || !isClampOverflowing(clamp)) {
+      return
+    }
+    cancelPendingClick()
+    // A double-click also selects the word under the pointer; the dialog is
+    // the answer, so the stray selection goes.
+    window.getSelection()?.removeAllRanges()
+    onOpenCell(row.id, columnId)
+  }
 
   return (
     <tr
@@ -78,6 +161,7 @@ function DataTableRowBase<TData extends RowData>(props: DataTableRowBaseProps<TD
         getRowClassName?.(row) ?? '',
       ].join(' ').trim()}
       onClick={handleRowClick}
+      onDoubleClick={handleRowDoubleClick}
     >
       {row.getVisibleCells().map((cell) => {
         if (cell.column.id === 'drag') {
@@ -138,13 +222,26 @@ function DataTableRowBase<TData extends RowData>(props: DataTableRowBaseProps<TD
           )
         }
 
-        const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext())
-        // Third-party interop boundary: the tooltip resolvers were folded into
-        // tanstack's untyped `meta` by DataTable, so narrow it back here.
-        const meta = cell.column.columnDef.meta as ManagedColumnTooltipMeta<TData> | undefined
+        // Third-party interop boundary: the managed-column settings were
+        // folded into tanstack's untyped `meta` by DataTable, so narrow it here.
+        const meta = cell.column.columnDef.meta as ManagedColumnMeta<TData> | undefined
         const tooltipContent = meta?.cellTooltip
           ? meta.cellTooltip(row.original)
           : null
+        const lineClamp = meta?.lineClamp ?? cellLineClamp
+        const content = flexRender(cell.column.columnDef.cell, cell.getContext())
+        const renderedCell = lineClamp === false
+          ? content
+          : <div
+            className={[
+              'jala-table-cell-clamp',
+              isExpanded ? 'jala-table-cell-clamp--expanded' : '',
+            ].join(' ').trim()}
+            style={{ '--jala-table-clamp-lines': lineClamp } as CSSProperties}
+            data-column-id={cell.column.id}
+          >{
+              content
+            }</div>
 
         return (
           <td

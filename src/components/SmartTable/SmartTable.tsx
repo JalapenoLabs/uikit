@@ -7,6 +7,7 @@ import type {
   DataTableRowActionsLayout,
   DataTableRowReorderPayload,
 } from './DataTable.types'
+import type { SmartTableFilter, SmartTableFilterValues } from './filters'
 import type { SmartTableLabels } from './labels'
 import type {
   ColumnFiltersState,
@@ -30,6 +31,8 @@ import { useScrollPositionRestore } from '../../hooks/useScrollPositionRestore'
 // User interface
 import { DataTable } from './DataTable'
 import { DataTableColumnControls } from './DataTableColumnControls'
+import { DataTableFilterDrawer } from './DataTableFilterDrawer'
+import { DataTableFilterTags } from './DataTableFilterTags'
 import { DataTableSearch } from './DataTableSearch'
 import { DataTableToolbar } from './DataTableToolbar'
 import { TableIcon } from './icons'
@@ -42,6 +45,7 @@ import { downloadCsv } from '../../utils/csv'
 
 // Misc
 import { buildTableCsv } from './exportTableCsv'
+import { applyFilters, isFilterValueActive, resolveFilters } from './filters'
 import { defaultSmartTableLabels } from './labels'
 
 type SmartTableIds = {
@@ -81,6 +85,16 @@ export type SmartTableControlsTarget = {
 export type SmartTableCsvExport = {
   fileName: string | (() => string)
   show?: boolean
+}
+
+// The filters drawer and its tags. Filters come from the managed columns'
+// `filter` and from `definitions`, for what is not a column. Leave `values`
+// out and the table keeps them itself; pass them with `onValuesChange` to keep
+// them elsewhere, such as in the address.
+export type SmartTableFilters<TData extends RowData> = {
+  definitions?: SmartTableFilter<TData>[]
+  values?: SmartTableFilterValues
+  onValuesChange?: (values: SmartTableFilterValues) => void
 }
 
 type SmartTableToolbar = {
@@ -140,6 +154,7 @@ export type SmartTableProps<TData extends RowData> = {
   cellOverflow?: DataTableCellOverflow
   search?: SmartTableSearch
   controls?: SmartTableControlsTarget
+  filters?: SmartTableFilters<TData>
   csvExport?: SmartTableCsvExport
   toolbar?: SmartTableToolbar
   columnControls?: SmartTableColumnControls
@@ -229,6 +244,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     onSortingChange: onSortingChangeProp,
     search: searchConfig,
     controls,
+    filters: filtersConfig,
     csvExport,
     toolbar: toolbarConfig,
     columnControls: columnControlsConfig,
@@ -286,6 +302,35 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     onSearchChangeProp?.(value)
   }, [ isSearchOwned, onSearchChangeProp ])
   const resolvedLabels = useMemo(() => ({ ...defaultSmartTableLabels, ...labels }), [ labels ])
+
+  const [ ownFilterValues, setOwnFilterValues ] = useState<SmartTableFilterValues>({})
+  const [ isFilterDrawerOpen, setIsFilterDrawerOpen ] = useState(false)
+  const filterValues = filtersConfig?.values ?? ownFilterValues
+  const isFilterValuesOwned = filtersConfig?.values === undefined
+  const onFilterValuesChange = filtersConfig?.onValuesChange
+  const setFilterValues = useCallback((next: SmartTableFilterValues) => {
+    if (isFilterValuesOwned) {
+      setOwnFilterValues(next)
+    }
+    onFilterValuesChange?.(next)
+  }, [ isFilterValuesOwned, onFilterValuesChange ])
+  const closeFilterDrawer = useCallback(() => setIsFilterDrawerOpen(false), [])
+  const resolvedFilters = useMemo(
+    () => resolveFilters(managedColumns, filtersConfig?.definitions),
+    [ managedColumns, filtersConfig?.definitions ],
+  )
+  // Filters narrow the rows before the table sees them, so the search, sort,
+  // pages, counts, and export all work on what passes them.
+  const filteredData = useMemo(
+    () => applyFilters(data, resolvedFilters, filterValues),
+    [ data, resolvedFilters, filterValues ],
+  )
+  let activeFilterCount = 0
+  for (const filter of resolvedFilters) {
+    if (isFilterValueActive(filterValues[filter.id])) {
+      activeFilterCount += 1
+    }
+  }
   const tableRef = useRef<Table<TData> | null>(null)
   const showSearch = searchConfig?.show ?? true
   const showToolbar = toolbarConfig?.show ?? true
@@ -402,6 +447,34 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     </TableTooltip>
     : null
 
+  const filterCountId = `${tableElementId}-filter-count`
+  const filtersElement = resolvedFilters.length
+    ? <TableTooltip content={resolvedLabels.filters} placement={{ side: 'bottom', align: 'center' }}>
+      <button
+        type='button'
+        className='jala-table-icon-button jala-table-filters-button'
+        aria-label={resolvedLabels.filters}
+        aria-describedby={activeFilterCount
+          ? filterCountId
+          : undefined}
+        aria-haspopup='dialog'
+        disabled={isDisabled}
+        onClick={() => setIsFilterDrawerOpen(true)}
+      >
+        <TableIcon name='filter' size={18} />
+        { activeFilterCount
+          ? <>
+            <span className='jala-table-filters-badge' aria-hidden='true'>{ activeFilterCount }</span>
+            <span id={filterCountId} className='jala-table-sr-only'>{
+              resolvedLabels.activeFilterCount(activeFilterCount)
+            }</span>
+          </>
+          : null
+        }
+      </button>
+    </TableTooltip>
+    : null
+
   const searchElement = showSearch
     ? <DataTableSearch
       value={searchValue}
@@ -415,7 +488,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
     />
     : null
 
-  const hasTableControls = Boolean(columnsElement || exportElement)
+  const hasTableControls = Boolean(filtersElement || columnsElement || exportElement)
 
   // The controls render in one of three places: a consumer's container (such
   // as the page titlebar), the table's own toolbar, or, with the toolbar
@@ -428,6 +501,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
         <div className='jala-table-controls jala-table-theme'>
           <SmartTableStyles />
           { searchElement }
+          { filtersElement }
           { columnsElement }
           { exportElement }
         </div>,
@@ -451,6 +525,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
       rightSlot={toolbarConfig?.rightSlot || hasTableControls
         ? <>
           { toolbarConfig?.rightSlot }
+          { filtersElement }
           { columnsElement }
           { exportElement }
         </>
@@ -461,6 +536,7 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
   }
   else if (hasTableControls) {
     controlsArea = <div className='jala-table-controls jala-table-controls--strip jala-table-theme'>
+      { filtersElement }
       { columnsElement }
       { exportElement }
     </div>
@@ -471,8 +547,9 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
   const paginationResetState = useMemo(() => ({
     searchValue: searchValue.trim(),
     columnFilters: columnFilters ?? [],
+    filterValues,
     sorting,
-  }), [ columnFilters, searchValue, sorting ])
+  }), [ columnFilters, filterValues, searchValue, sorting ])
   const previousPaginationResetStateRef = useRef(paginationResetState)
 
   useEffect(() => {
@@ -514,11 +591,27 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
   return (
     <>
       { controlsArea }
+      <DataTableFilterTags
+        filters={resolvedFilters}
+        values={filterValues}
+        labels={resolvedLabels}
+        onRemove={(filterId) => setFilterValues({ ...filterValues, [filterId]: null })}
+      />
+      { isFilterDrawerOpen
+        ? <DataTableFilterDrawer
+          filters={resolvedFilters}
+          values={filterValues}
+          labels={resolvedLabels}
+          onApply={setFilterValues}
+          onClose={closeFilterDrawer}
+        />
+        : null
+      }
       <DataTable
         tableElementId={tableElementId}
         tableAriaLabel={tableAriaLabel}
         className={className}
-        data={data}
+        data={filteredData}
         managedColumns={managedColumns}
         getRowId={getRowId}
         searchTerm={searchValue}
@@ -542,7 +635,8 @@ export function SmartTable<TData extends RowData>(props: SmartTableProps<TData>)
         columnOrder={columnOrder}
         onColumnOrderChange={setColumnOrder}
         enableRowReorder={enableRowReorder}
-        isRowReorderBlocked={isRowReorderBlocked}
+        // Reordering a filtered view would move rows the user cannot see.
+        isRowReorderBlocked={isRowReorderBlocked || activeFilterCount > 0}
         onRowReorder={onRowReorder}
         enableRowHighlight={enableRowHighlight}
         highlightedRowId={highlightedRowId}

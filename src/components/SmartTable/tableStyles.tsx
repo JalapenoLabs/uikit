@@ -531,6 +531,7 @@ export const smartTableCss = `
 }
 
 .jala-table-dialog-title {
+  flex-shrink: 0;
   margin: 0;
   padding: 1.25rem 1.25rem 0.75rem;
   font-size: 1.125rem;
@@ -546,10 +547,44 @@ export const smartTableCss = `
 }
 
 .jala-table-dialog-footer {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 1rem 1.25rem 1.25rem;
+}
+
+.jala-table-dialog-backdrop--drawer {
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: 0;
+}
+
+.jala-table-dialog--drawer {
+  width: min(28rem, 100vw);
+  max-height: none;
+  height: 100%;
+  border-radius: 0;
+  border-width: 0 0 0 1px;
+  animation: jala-table-drawer-in 200ms ease-out;
+}
+
+/* A drawer's actions are full width, one per line, primary first. */
+.jala-table-dialog--drawer .jala-table-dialog-footer {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+@keyframes jala-table-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jala-table-dialog--drawer {
+    animation: none;
+  }
 }
 
 .jala-table-cell-dialog-content {
@@ -752,6 +787,161 @@ export const smartTableCss = `
   margin-bottom: 0.5rem;
 }
 
+/* -------------------------------- Filters -------------------------------- */
+
+.jala-table-filters-button {
+  position: relative;
+}
+
+.jala-table-filters-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border: 2px solid var(--jala-table-surface);
+  border-radius: 999px;
+  background: var(--jala-table-accent);
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.jala-table-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* One press anywhere on the tag removes its filter. */
+.jala-table-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 16rem;
+  height: 28px;
+  padding: 0 0.5rem 0 0.75rem;
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 999px;
+  background: var(--jala-table-item-bg);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--jala-table-text-strong);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.jala-table-filter-tag:hover {
+  background-color: var(--jala-table-row-active-bg);
+}
+
+.jala-table-filter-tag:focus-visible {
+  outline: 2px solid var(--jala-table-accent);
+  outline-offset: 2px;
+}
+
+.jala-table-filter-tag-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jala-table-filter-tag svg {
+  flex-shrink: 0;
+  color: var(--jala-table-text-muted);
+}
+
+/* --------------------------------- Fields -------------------------------- */
+
+.jala-table-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.jala-table-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.jala-table-field-label {
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--jala-table-text-strong);
+}
+
+.jala-table-text-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 10px;
+  background: var(--jala-table-control-bg);
+  font: inherit;
+  color: var(--jala-table-control-text);
+}
+
+.jala-table-text-input:focus {
+  outline: none;
+  border-color: var(--jala-table-accent);
+}
+
+.jala-table-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.jala-table-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  cursor: pointer;
+}
+
+.jala-table-segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 2px;
+  border: 1px solid var(--jala-table-panel-border);
+  border-radius: 10px;
+  background: var(--jala-table-control-bg);
+}
+
+.jala-table-segment {
+  padding: 0.375rem 0.875rem;
+  border-radius: 8px;
+  color: var(--jala-table-text);
+  cursor: pointer;
+}
+
+.jala-table-segment--selected {
+  background: var(--jala-table-panel-bg);
+  color: var(--jala-table-text-strong);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+}
+
+.jala-table-segment:has(input:focus-visible) {
+  outline: 2px solid var(--jala-table-accent);
+}
+
 /* ----------------------------- Column controls --------------------------- */
 
 .jala-table-columns {
@@ -950,6 +1140,15 @@ export const smartTableCss = `
 }
 
 /* ------------------------------- Utilities ------------------------------- */
+
+/* The kit's own boxes size by their border, whatever the page's default. */
+.jala-table-theme .jala-table-dialog,
+.jala-table-theme .jala-table-dialog *,
+.jala-table-search-input,
+.jala-table-native-select,
+.jala-table-text-input {
+  box-sizing: border-box;
+}
 
 .jala-table-sr-only {
   position: absolute;

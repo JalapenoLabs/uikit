@@ -180,6 +180,16 @@ made during the port:
 - The search keeps its own text unless `search.value` is passed, starts narrow
   and widens once it holds text, fills the width on phones, shows a spinner
   for `search.isLoading`, and takes Ctrl+F unless focus is in a text field.
+- Filters: one list from two sources, the managed columns' `filter` and
+  `filters.definitions` for what is not a column. Kinds are `select`,
+  `multiSelect`, `boolean`, and `text`. Values are one record
+  (`filters.values` + `onValuesChange`, or kept by the table) so a consumer can
+  keep them in the address. Filters narrow `data` before TanStack sees it
+  (`applyFilters`), so search, sort, pages, counts, and export all agree. A
+  table filter without `matches` is shown but applied by the consumer. The
+  icon-only Filters button (with a count badge) opens a full-height drawer
+  (`TableDialog` variant `drawer`) that edits a draft until Apply; active
+  filters show as tags above the table, removed by one press.
 - `csvExport` adds a one-click export (`toCsv` / `downloadCsv` in
   `src/utils/csv.ts`) of the filtered, sorted rows across every page under the
   visible columns. A column exports `exportValue` or its raw accessor value;

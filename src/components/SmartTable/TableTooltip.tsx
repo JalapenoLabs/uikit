@@ -15,6 +15,8 @@ type Props = {
   // Milliseconds the pointer must hover before the tooltip shows.
   delay?: number
   placement?: FloatingPlacement
+  // Keeps the wrapper, so the children never remount, but shows nothing.
+  isDisabled?: boolean
   className?: string
 }
 
@@ -84,7 +86,7 @@ export function TableTooltip(props: Props) {
     }}
   >
     {children}
-    { isVisible
+    { isVisible && !props.isDisabled
       ? <FloatingLayer
         anchor={triggerElement}
         placement={placement}

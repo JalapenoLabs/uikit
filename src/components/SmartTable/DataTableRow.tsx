@@ -28,8 +28,15 @@ type DataTableRowProps<TData extends RowData> = {
   cellLineClamp: number | false
   cellOverflow: DataTableCellOverflow
   onOpenCell: (rowId: string, columnId: string) => void
+  onSelectRow: (rowId: string, modifiers: RowSelectModifiers) => void
   getRowClassName?: (row: Row<TData>) => string | undefined
   labels: SmartTableLabels
+}
+
+export type RowSelectModifiers = {
+  shiftKey: boolean
+  ctrlKey: boolean
+  metaKey: boolean
 }
 
 // A press on one of these is the element's own, never the row's.
@@ -69,6 +76,7 @@ function DataTableRowBase<TData extends RowData>(props: DataTableRowBaseProps<TD
     cellLineClamp,
     cellOverflow,
     onOpenCell,
+    onSelectRow,
     getRowClassName,
     labels,
     sortable,
@@ -200,7 +208,17 @@ function DataTableRowBase<TData extends RowData>(props: DataTableRowBaseProps<TD
                 type='checkbox'
                 aria-label={labels.select}
                 checked={row.getIsSelected()}
-                onChange={row.getToggleSelectedHandler()}
+                onChange={(event) => {
+                  // A checkbox's change arrives as its click, which carries
+                  // the modifier keys for range selection.
+                  const nativeEvent = event.nativeEvent
+                  const isMouse = nativeEvent instanceof MouseEvent
+                  onSelectRow(row.id, {
+                    shiftKey: isMouse && nativeEvent.shiftKey,
+                    ctrlKey: isMouse && nativeEvent.ctrlKey,
+                    metaKey: isMouse && nativeEvent.metaKey,
+                  })
+                }}
                 disabled={selectionDisabled || !row.getCanSelect()}
                 className='jala-table-checkbox'
                 data-no-row-highlight='true'

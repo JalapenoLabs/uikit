@@ -1,6 +1,8 @@
 // Copyright © 2026 Jalapeno Labs
 
-import type { DataTableProps, ManagedColumnMeta } from './DataTable.types'
+import type { DataTableProps, DataTableSelectionAction, ManagedColumnMeta } from './DataTable.types'
+import type { RowSelectModifiers } from './DataTableRow'
+import type { SelectionHistory } from './selection'
 import type { OpenTableCell } from './TableCellDialog'
 import type {
   ColumnFiltersState,
@@ -28,6 +30,7 @@ import {
 import { arrayMove } from '@dnd-kit/sortable'
 import { useDataTableColumns } from './useDataTableColumns'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useSelectionHotkeys } from './useSelectionHotkeys'
 
 // User interface
 import { DataTableBody } from './DataTableBody'
@@ -35,15 +38,29 @@ import { DataTableDndWrapper } from './DataTableDndWrapper'
 import { DataTableFooter } from './DataTableFooter'
 import { DataTableHeader } from './DataTableHeader'
 import { TableCellDialog } from './TableCellDialog'
+import { DataTableBulkEditDialog } from './DataTableBulkEditDialog'
+import { DataTableSelectAllBanner } from './DataTableSelectAllBanner'
+import { DataTableSelectionBar } from './DataTableSelectionBar'
+import { TableIcon } from './icons'
 import { SmartTableStyles } from './tableStyles'
 
 // Misc
 import { mergeColumnOrder } from './columnOrderUtils'
+import {
+  countSelected,
+  EMPTY_SELECTION_HISTORY,
+  recordSelectionChange,
+  redoSelection,
+  selectRange,
+  undoSelection,
+} from './selection'
 import { defaultSmartTableLabels } from './labels'
 
 // Touch screens have no hover, and narrow screens are almost always touch, so
 // both get the ellipsis menu on every row instead of the hover tray.
 const CANNOT_HOVER_MEDIA_QUERY = '(hover: none), (max-width: 640px)'
+const PHONE_MEDIA_QUERY = '(max-width: 640px)'
+const BULK_EDIT_ACTION_ID = 'jala-table-bulk-edit'
 
 // ux.md: a table row is never more than three lines tall until expanded.
 const DEFAULT_CELL_LINE_CLAMP = 3
@@ -101,8 +118,10 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     getRowId,
     searchTerm,
     isDisabled,
-    enableSelection = false,
+    enableSelection: enableSelectionProp = false,
     rowSelection: rowSelectionProp,
+    selectionActions,
+    bulkEdit,
     onRowSelectionChange,
     columnFilters: columnFiltersProp,
     onColumnFiltersChange: onColumnFiltersChangeProp,
@@ -227,8 +246,39 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
       : ownExpandedRowId
   }
 
+  // ux.md: multi-select is an advanced, desktop-only feature, so phones never
+  // see the checkboxes or the bar.
+  const isPhone = useMediaQuery(PHONE_MEDIA_QUERY)
+  const enableSelection = enableSelectionProp && !isPhone
   const rowSelection = rowSelectionProp ?? EMPTY_ROW_SELECTION
   const handleRowSelectionChange = onRowSelectionChange ?? NOOP_ROW_SELECTION_CHANGE
+
+  // Every selection change is recorded for Ctrl+Z and Ctrl+Shift+Z, and the
+  // last row clicked anchors shift-click ranges.
+  const [ selectionHistory, setSelectionHistory ] = useState<SelectionHistory>(EMPTY_SELECTION_HISTORY)
+  const selectionAnchorRef = useRef<string | null>(null)
+  const [ isBulkEditOpen, setIsBulkEditOpen ] = useState(false)
+  const closeBulkEdit = useCallback(() => setIsBulkEditOpen(false), [])
+
+  function changeSelection(next: RowSelectionState) {
+    setSelectionHistory((history) => recordSelectionChange(history, rowSelection))
+    handleRowSelectionChange(next)
+  }
+
+  const handleTableSelectionChange: OnChangeFn<RowSelectionState> = (updater) => {
+    changeSelection(typeof updater === 'function'
+      ? updater(rowSelection)
+      : updater)
+  }
+
+  // History belongs to one selection; once nothing is selected, it starts over.
+  const hasAnySelected = countSelected(rowSelection) > 0
+  useEffect(() => {
+    if (!hasAnySelected) {
+      setSelectionHistory(EMPTY_SELECTION_HISTORY)
+      selectionAnchorRef.current = null
+    }
+  }, [ hasAnySelected ])
   const selectionDisabled = Boolean(isDisabled || !enableSelection)
   const hasSelectionProps = rowSelectionProp !== undefined && onRowSelectionChange !== undefined
   const hasWarnedSelectionConfigRef = useRef(false)
@@ -236,7 +286,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
   // Selection without controlled props silently renders dead checkboxes, so
   // surface the misconfiguration loudly (once per table).
   useEffect(() => {
-    if (!enableSelection || hasSelectionProps) {
+    if (!enableSelectionProp || hasSelectionProps) {
       hasWarnedSelectionConfigRef.current = false
       return
     }
@@ -250,7 +300,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
       `DataTable "${tableElementId}" has enableSelection=true but is missing controlled selection props. `
       + 'Pass both rowSelection and onRowSelectionChange.',
     )
-  }, [ enableSelection, hasSelectionProps, tableElementId ])
+  }, [ enableSelectionProp, hasSelectionProps, tableElementId ])
 
   const hasActions = Boolean(renderRowActions || rowActions?.length)
   const cannotHover = useMediaQuery(CANNOT_HOVER_MEDIA_QUERY)
@@ -422,7 +472,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
     enableSortingRemoval: true,
     enableRowSelection: enableSelection,
     onRowSelectionChange: enableSelection && !selectionDisabled
-      ? handleRowSelectionChange
+      ? handleTableSelectionChange
       : undefined,
     onSortingChange: enableSorting
       ? handleSortingChange
@@ -485,6 +535,80 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
   useEffect(() => {
     onFilteredRowCountChange?.(fullRowModels.length)
   }, [ fullRowModels.length, onFilteredRowCountChange ])
+
+  // The selection the bar acts on: selected rows that pass the search and
+  // filters, on every page.
+  const selectedRows = enableSelection
+    ? table.getFilteredSelectedRowModel().rows.map((row) => row.original)
+    : []
+  const isSelectionActive = enableSelection && !selectionDisabled
+
+  function handleSelectRow(rowId: string, modifiers: RowSelectModifiers) {
+    if (!isSelectionActive) {
+      return
+    }
+    if (modifiers.shiftKey) {
+      // Shift selects every row between the last one clicked and this one;
+      // Ctrl+Shift unselects them. Ranges follow what the user sees.
+      const orderedRowIds = table.getPrePaginationRowModel().rows.map((row) => row.id)
+      const shouldSelect = !modifiers.ctrlKey && !modifiers.metaKey
+      changeSelection(selectRange(rowSelection, orderedRowIds, selectionAnchorRef.current, rowId, shouldSelect))
+    }
+    else {
+      const next = { ...rowSelection }
+      if (next[rowId]) {
+        delete next[rowId]
+      }
+      else {
+        next[rowId] = true
+      }
+      changeSelection(next)
+    }
+    selectionAnchorRef.current = rowId
+  }
+
+  function stepSelection(step: ReturnType<typeof undoSelection>) {
+    if (!step) {
+      return
+    }
+    setSelectionHistory(step.history)
+    handleRowSelectionChange(step.selection)
+  }
+
+  const selectPage = () => table.toggleAllPageRowsSelected(true)
+  const clearSelection = () => changeSelection({})
+
+  useSelectionHotkeys(isSelectionActive, {
+    hasSelection: selectedRows.length > 0,
+    canUndo: selectionHistory.past.length > 0,
+    canRedo: selectionHistory.future.length > 0,
+    onClear: clearSelection,
+    onUndo: () => stepSelection(undoSelection(selectionHistory, rowSelection)),
+    onRedo: () => stepSelection(redoSelection(selectionHistory, rowSelection)),
+    onSelectAll: selectPage,
+  })
+
+  // Stable between renders, so the bar measures its actions only when they change.
+  const barActions = useMemo(() => {
+    const actions: DataTableSelectionAction<TData>[] = []
+    if (bulkEdit) {
+      actions.push({
+        id: BULK_EDIT_ACTION_ID,
+        label: labels.bulkEdit,
+        icon: <TableIcon name='edit' size={16} />,
+        onPress: () => setIsBulkEditOpen(true),
+      })
+    }
+    actions.push(...(selectionActions ?? []))
+    return actions
+  }, [ bulkEdit, selectionActions, labels.bulkEdit ])
+
+  const showSelectAllBanner = Boolean(
+    isSelectionActive
+    && pagination
+    && table.getPageCount() > 1
+    && table.getIsAllPageRowsSelected(),
+  )
 
   const tableState = table.getState()
   // Disabled features are handed to react-table as `state.<feature>: undefined`
@@ -573,6 +697,7 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
         cellLineClamp={cellLineClamp}
         cellOverflow={cellOverflow}
         onOpenCell={openCellById}
+        onSelectRow={handleSelectRow}
         getRowClassName={getRowClassName}
         searchTerm={searchTerm}
         labels={labels}
@@ -583,10 +708,25 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
   return (
     <section
       id={tableElementId}
-      className={[ 'jala-table-root jala-table-theme', className ?? '' ].join(' ').trim()}
+      className={[
+        'jala-table-root jala-table-theme',
+        isSelectionActive && selectedRows.length ? 'jala-table-root--selecting' : '',
+        className ?? '',
+      ].join(' ').trim()}
       ref={stickyScrollbar ? scrollContainerRef : undefined}
     >
       <SmartTableStyles />
+      { showSelectAllBanner
+        ? <DataTableSelectAllBanner
+          pageRowCount={table.getRowModel().rows.length}
+          totalRowCount={table.getPrePaginationRowModel().rows.length}
+          isEverythingSelected={table.getIsAllRowsSelected()}
+          labels={labels}
+          onSelectEverything={() => table.toggleAllRowsSelected(true)}
+          onClear={clearSelection}
+        />
+        : null
+      }
       <div
         className={stickyScrollbar
           ? undefined
@@ -604,6 +744,20 @@ export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
           : tableElement
         }
       </div>
+      { isSelectionActive && selectedRows.length
+        ? <DataTableSelectionBar
+          selectedRows={selectedRows}
+          actions={barActions}
+          labels={labels}
+          onSelectAll={selectPage}
+          onClear={clearSelection}
+        />
+        : null
+      }
+      { isBulkEditOpen && bulkEdit && selectedRows.length
+        ? <DataTableBulkEditDialog bulkEdit={bulkEdit} rows={selectedRows} labels={labels} onClose={closeBulkEdit} />
+        : null
+      }
       { openCell
         ? <TableCellDialog table={table} cell={openCell} labels={labels} onClose={closeOpenCell} />
         : null

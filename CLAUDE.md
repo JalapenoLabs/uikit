@@ -190,6 +190,17 @@ made during the port:
   icon-only Filters button (with a count badge) opens a full-height drawer
   (`TableDialog` variant `drawer`) that edits a draft until Apply; active
   filters show as tags above the table, removed by one press.
+- Multi-select (`enableSelection`, off on phones): checkboxes on the left,
+  shift-click ranges (Ctrl+Shift unselects), and a floating bar
+  (`DataTableSelectionBar`, portaled) with the count, Select all, the
+  `selectionActions` (plain, or `choices` as a drop-up), and an X. Actions that
+  do not fit move from the right into "..." (`countFittingActions` over
+  measured widths). `bulkEdit` adds "Edit fields": keep as is, set to, or
+  clear per field. Hotkeys (`useSelectionHotkeys`, never in text fields,
+  dialogs, or menus): Escape clears, Ctrl+A / Ctrl+Shift+A select and deselect
+  all, Ctrl+Z / Ctrl+Shift+Z undo and redo selection changes while there is a
+  selection. With a whole page selected, a banner offers every row across the
+  pages. Actions get the selected rows that pass the search and filters.
 - `csvExport` adds a one-click export (`toCsv` / `downloadCsv` in
   `src/utils/csv.ts`) of the filtered, sorted rows across every page under the
   visible columns. A column exports `exportValue` or its raw accessor value;

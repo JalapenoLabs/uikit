@@ -96,12 +96,18 @@ export type {
 export { DataTable } from './components/SmartTable/DataTable'
 export type {
   DataTableAction,
+  DataTableBulkEdit,
+  DataTableBulkEditChange,
+  DataTableBulkEditChanges,
+  DataTableBulkEditField,
   DataTableCellOverflow,
   DataTableManagedColumn,
   DataTablePaginationConfig,
   DataTableProps,
   DataTableRowActionsLayout,
   DataTableRowReorderPayload,
+  DataTableSelectionAction,
+  DataTableSelectionChoice,
 } from './components/SmartTable/DataTable.types'
 export { DataTableToolbar } from './components/SmartTable/DataTableToolbar'
 export { DataTableSearch } from './components/SmartTable/DataTableSearch'
